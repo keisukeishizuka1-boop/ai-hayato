@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AIハヤト - 自律型サイバーマスコット</title>
+  <style>
+    :root {
+      --bg-deep: #030914;
+      --bg-panel: rgba(8, 22, 42, 0.88);
+      --cyan-main: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.45);
+      --blue-accent: #1d7dff;
+      --text-main: #e6f7ff;
+      --text-sub: #7fb8cc;
+      --alert-red: #ff3366;
+      --alert-glow: rgba(255, 51, 102, 0.5);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      user-select: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 42%, rgba(255, 30, 56, 0.12) 0%, rgba(0, 240, 255, 0.08) 38%, rgba(3, 9, 20, 0.95) 75%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 780px;
+      height: 100dvh;
+      margin: 0 auto;
+      padding-top: calc(10px + var(--safe-top));
+      padding-bottom: calc(10px + var(--safe-bottom));
+      padding-left: 12px;
+      padding-right: 12px;
+      gap: 6px;
+    }
+
+    .hud-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 14px;
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.12);
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #ff1e38;
+      box-shadow: 0 0 10px #ff1e38;
+      animation: pulseDot 2s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+
+    .hud-title-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .hud-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--cyan-main);
+      text-shadow: 0 0 8px var(--cyan-glow);
+      white-space: nowrap;
+    }
+
+    .hud-sub {
+      font-size: 10px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .voice-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 36px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1.5px solid var(--cyan-main);
+      background: rgba(0, 240, 255, 0.14);
+      color: var(--cyan-main);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .voice-toggle-btn.is-off {
+      border-color: rgba(127, 184, 204, 0.4);
+      background: rgba(15, 30, 50, 0.6);
+      color: var(--text-sub);
+    }
+
+    .voice-toggle-btn:active {
+      transform: scale(0.95);
+    }
+
+    .stage-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      padding: 4px 0;
+      gap: 6px;
+    }
+
+    .speech-bubble {
+      position: relative;
+      width: 100%;
+      max-width: 580px;
+      background: rgba(6, 20, 38, 0.92);
+      border: 1.5px solid var(--cyan-main);
+      border-radius: 18px;
+      padding: 10px 14px 9px 14px;
+      box-shadow: 0 0 22px rgba(0, 240, 255, 0.2), inset 0 0 14px rgba(0, 240, 255, 0.08);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .speech-bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -9px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 15px;
+      height: 15px;
+      background: rgba(6, 20, 38, 0.96);
+      border-right: 1.5px solid var(--cyan-main);
+      border-bottom: 1.5px solid var(--cyan-main);
+    }
+
+    .speech-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .reaction-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan-main);
+      letter-spacing: 0.04em;
+    }
+
+    .speech-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .replay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 240, 255, 0.45);
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan-main);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .replay-btn:active {
+      transform: scale(0.94);
+    }
+
+    .stop-speak-btn {
+      display: none;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--alert-red);
+      background: rgba(255, 51, 102, 0.2);
+      color: #ff85a2;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stop-speak-btn.is-visible {
+      display: inline-flex;
+    }
+
+    .speech-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #f0fcff;
+      min-height: 40px;
+      max-height: 112px;
+      overflow-y: auto;
+      word-break: break-word;
+      user-select: text;
+    }
+
+    .mascot-stage-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 540px;
+      gap: 10px;
+      padding: 2px 0;
+    }
+
+    .side-orb-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan-main);
+      background: radial-gradient(circle at 30% 30%, rgba(0, 240, 255, 0.24), rgba(6, 20, 38, 0.92));
+      color: var(--cyan-main);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.28), inset 0 0 10px rgba(0, 240, 255, 0.15);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      touch-action: manipulation;
+    }
+
+    .side-orb-btn:active {
+      transform: scale(0.91);
+    }
+
+    .side-orb-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .side-orb-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .side-orb-btn.is-handsfree-standby {
+      border-color: #00ffaa;
+      background: radial-gradient(circle at 30% 30%, rgba(0, 255, 170, 0.3), rgba(5, 28, 32, 0.95));
+      color: #80ffd4;
+      box-shadow: 0 0 20px rgba(0, 255, 170, 0.45), inset 0 0 12px rgba(0, 255, 170, 0.2);
+      animation: standbyPulse 2.2s infinite;
+    }
+
+    .side-orb-btn.is-listening {
+      border-color: var(--alert-red);
+      background: radial-gradient(circle at 30% 30%, rgba(255, 51, 102, 0.4), rgba(36, 8, 20, 0.95));
+      color: #ffffff;
+      box-shadow: 0 0 24px var(--alert-glow), inset 0 0 14px rgba(255, 51, 102, 0.3);
+      animation: micPulse 0.95s infinite;
+    }
+
+    .side-orb-btn.send-orb {
+      border-color: #38a3ff;
+      background: linear-gradient(145deg, rgba(0, 210, 255, 0.32), rgba(29, 125, 255, 0.45));
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(29, 125, 255, 0.4);
+    }
+
+    .side-orb-btn.send-orb.is-speaking-stop {
+      border-color: var(--alert-red);
+      background: linear-gradient(145deg, rgba(255, 51, 102, 0.35), rgba(140, 18, 52, 0.65));
+      color: #ffd6e0;
+      box-shadow: 0 0 18px var(--alert-glow);
+    }
+
+    .mascot-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 2px;
+      touch-action: manipulation;
+    }
+
+    .mascot-holo-ring {
+      position: absolute;
+      bottom: 12px;
+      width: 126px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 30, 56, 0.55);
+      background: radial-gradient(ellipse at center, rgba(255, 30, 56, 0.25) 0%, transparent 72%);
+      box-shadow: 0 0 18px rgba(255, 30, 56, 0.4);
+      animation: ringPulse 3.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .mascot-svg-wrap {
+      width: 152px;
+      height: 168px;
+      animation: floatIdle 3.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 14px rgba(255, 30, 56, 0.38));
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mascot-svg-wrap.anim-bounce {
+      animation: excitedBounce 0.65s ease-in-out 2, floatIdle 3.2s ease-in-out 1.3s infinite;
+    }
+
+    .mascot-svg-wrap.anim-analyze {
+      animation: analyzeWiggle 0.45s ease-in-out 3, floatIdle 3.2s ease-in-out 1.35s infinite;
+    }
+
+    .mascot-tap-hint {
+      margin-top: 2px;
+      font-size: 10px;
+      color: var(--text-sub);
+      letter-spacing: 0.04em;
+      opacity: 0.85;
+    }
+
+    .eye-blink-group {
+      transform-origin: 100px 94px;
+      animation: blinkEyes 4.6s infinite;
+    }
+
+    .mouth-talking {
+      transform-origin: 100px 121px;
+      animation: mouthTalk 0.24s infinite alternate ease-in-out;
+    }
+
+    .control-dock {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--bg-panel);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 18px;
+      padding: 9px 10px;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    .mic-status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-height: 20px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(0, 240, 255, 0.06);
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .mic-status-bar.is-standby {
+      color: #80ffd4;
+      background: rgba(0, 255, 170, 0.1);
+      font-weight: 700;
+    }
+
+    .mic-status-bar.is-listening {
+      color: #ff85a2;
+      background: rgba(255, 51, 102, 0.14);
+      font-weight: 700;
+    }
+
+    .mic-status-bar.is-fallback {
+      color: #ffd166;
+    }
+
+    .quick-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip-btn {
+      flex-shrink: 0;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 240, 255, 0.32);
+      background: rgba(0, 240, 255, 0.08);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .chip-btn:active {
+      background: rgba(0, 240, 255, 0.25);
+      transform: scale(0.96);
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .text-input {
+      flex: 1;
+      min-width: 0;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      background: rgba(2, 10, 22, 0.9);
+      color: #ffffff;
+      font-size: 16px;
+      outline: none;
+      user-select: text;
+    }
+
+    .text-input::placeholder {
+      color: rgba(127, 184, 204, 0.55);
+      font-size: 13px;
+    }
+
+    .text-input:focus {
+      border-color: var(--cyan-main);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+    }
+
+    .clear-input-btn {
+      height: 40px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(127, 184, 204, 0.35);
+      background: rgba(12, 26, 46, 0.85);
+      color: var(--text-sub);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .clear-input-btn:active {
+      transform: scale(0.95);
+    }
+
+    @media (max-width: 390px) {
+      .mascot-stage-row {
+        gap: 6px;
+      }
+      .side-orb-btn {
+        width: 60px;
+        height: 60px;
+      }
+      .mascot-svg-wrap {
+        width: 138px;
+        height: 152px;
+      }
+    }
+
+    @media (max-height: 680px) {
+      .mascot-svg-wrap {
+        width: 130px;
+        height: 144px;
+      }
+      .speech-bubble {
+        padding: 8px 12px 7px 12px;
+      }
+      .speech-text {
+        font-size: 13px;
+        min-height: 36px;
+        max-height: 78px;
+      }
+      .control-dock {
+        padding: 7px 9px;
+        gap: 5px;
+      }
+    }
+
+    @media (min-width: 700px) {
+      .app-shell {
+        padding-top: calc(18px + var(--safe-top));
+        padding-bottom: calc(18px + var(--safe-bottom));
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+      .hud-title {
+        font-size: 17px;
+      }
+      .speech-bubble {
+        padding: 18px 22px;
+      }
+      .speech-text {
+        font-size: 17px;
+        min-height: 60px;
+        max-height: 155px;
+      }
+      .mascot-stage-row {
+        gap: 28px;
+      }
+      .side-orb-btn {
+        width: 84px;
+        height: 84px;
+      }
+      .side-orb-icon {
+        font-size: 28px;
+      }
+      .side-orb-label {
+        font-size: 12px;
+      }
+      .mascot-svg-wrap {
+        width: 220px;
+        height: 242px;
+      }
+      .mascot-holo-ring {
+        width: 175px;
+        height: 34px;
+      }
+      .chip-btn {
+        font-size: 14px;
+        padding: 8px 15px;
+      }
+    }
+
+    @keyframes floatIdle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-9px); }
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(0.86); opacity: 0.35; }
+    }
+
+    @keyframes excitedBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-16px) scale(1.06, 0.96); }
+      70% { transform: translateY(3px) scale(0.97, 1.03); }
+    }
+
+    @keyframes analyzeWiggle {
+      0%, 100% { transform: rotate(0deg) scale(1.03); }
+      25% { transform: rotate(-6deg) scale(1.04); }
+      75% { transform: rotate(6deg) scale(1.04); }
+    }
+
+    @keyframes blinkEyes {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.08); }
+    }
+
+    @keyframes mouthTalk {
+      0% { transform: scaleY(0.4); }
+      100% { transform: scaleY(1.2); }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.8); }
+    }
+
+    @keyframes standbyPulse {
+      0%, 100% { box-shadow: 0 0 14px rgba(0, 255, 170, 0.35), inset 0 0 10px rgba(0, 255, 170, 0.15); }
+      50% { box-shadow: 0 0 24px rgba(0, 255, 170, 0.65), inset 0 0 16px rgba(0, 255, 170, 0.3); }
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 14px var(--alert-glow); transform: scale(1); }
+      50% { box-shadow: 0 0 28px rgba(255, 51, 102, 0.9); transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hud-header">
+      <div class="hud-brand">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div class="hud-title-group">
+          <div class="hud-title">SYSTEM // AI HAYATO</div>
+          <div class="hud-sub" id="hudSubStatus">自律思考モジュール・スタンバイ</div>
+        </div>
+      </div>
+      <button type="button" class="voice-toggle-btn is-on" id="voiceToggleBtn" aria-label="音声出力の切り替え">
+        <span id="voiceToggleIcon">🔊</span>
+        <span id="voiceToggleLabel">音声 ON</span>
+      </button>
+    </header>
+
+    <main class="stage-area">
+      <section class="speech-bubble" aria-live="polite">
+        <div class="speech-meta">
+          <span class="reaction-tag" id="reactionTag">[システム起動完了]</span>
+          <div class="speech-controls">
+            <button type="button" class="stop-speak-btn" id="stopSpeakBtn" aria-label="読み上げを停止">⏹ 停止</button>
+            <button type="button" class="replay-btn" id="replayBtn" aria-label="セリフをもう一度聞く">🔊 もう一度聞く</button>
+          </div>
+        </div>
+        <div class="speech-text" id="speechText">
+          システム起動完了。お呼びですか、殿？ 左の「常時音声」を1回押していただければ、あとはボタンを押さずに声だけでご質問にお答えしますよ！
+        </div>
+      </section>
+
+      <div class="mascot-stage-row">
+        <button
+          type="button"
+          class="side-orb-btn"
+          id="leftVoiceOrbBtn"
+          aria-label="常時音声待機のオンオフ"
+        >
+          <span class="side-orb-icon" id="leftVoiceIcon">🎙️</span>
+          <span class="side-orb-label" id="leftVoiceLabel">常時音声<br />OFF</span>
+        </button>
+
+        <div class="mascot-container" id="mascotBtn" role="button" tabindex="0" aria-label="AIハヤトに話しかける">
+          <div class="mascot-holo-ring"></div>
+          <div class="mascot-svg-wrap" id="mascotWrap">
+            <svg viewBox="0 0 200 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="badgeClip">
+                  <circle cx="100" cy="116" r="84" />
+                </clipPath>
+                <radialGradient id="redFrameGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="70%" stop-color="#05080f" />
+                  <stop offset="94%" stop-color="#3a0610" />
+                  <stop offset="100%" stop-color="#ff1e38" />
+                </radialGradient>
+              </defs>
+
+              <circle cx="100" cy="116" r="85" fill="url(#redFrameGlow)" stroke="#ff1e38" stroke-width="5" />
+              <circle cx="100" cy="116" r="89" fill="none" stroke="rgba(255, 30, 56, 0.45)" stroke-width="2" />
+
+              <g clip-path="url(#badgeClip)">
+                <path
+                  d="M 42 188 C 36 164, 52 144, 74 142 L 126 142 C 148 144, 164 164, 158 188 Z"
+                  fill="#7c7c80"
+                  stroke="#1c1c1e"
+                  stroke-width="3.5"
+                  stroke-linejoin="round"
+                />
+                <path d="M 58 164 C 60 174, 62 182, 62 188" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <path d="M 142 164 C 140 174, 138 182, 138 188" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <polygon points="82,142 118,142 100,178" fill="#f7f9fc" stroke="#1c1c1e" stroke-width="2.5" stroke-linejoin="round" />
+                <polygon points="95,144 105,144 103,152 97,152" fill="#2d769e" stroke="#1c1c1e" stroke-width="2.2" stroke-linejoin="round" />
+                <polygon points="97,152 103,152 106,174 100,182 94,174" fill="#3689b5" stroke="#1c1c1e" stroke-width="2.2" stroke-linejoin="round" />
+                <path d="M 80 142 L 74 156 L 84 160 L 82 167 L 99 182" fill="#8d8d92" stroke="#1c1c1e" stroke-width="2.6" stroke-linejoin="round" />
+                <path d="M 120 142 L 126 156 L 116 160 L 118 167 L 101 182" fill="#8d8d92" stroke="#1c1c1e" stroke-width="2.6" stroke-linejoin="round" />
+                <ellipse cx="64" cy="182" rx="10" ry="8" fill="#8c7a72" stroke="#1c1c1e" stroke-width="2.8" />
+                <ellipse cx="136" cy="182" rx="10" ry="8" fill="#8c7a72" stroke="#1c1c1e" stroke-width="2.8" />
+              </g>
+
+              <path d="M 43 84 C 31 80, 29 104, 45 106" fill="#fae6d6" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+              <path d="M 41 90 C 36 90, 36 99, 42 99" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round" />
+              <path d="M 157 84 C 169 80, 171 104, 155 106" fill="#fae6d6" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+              <path d="M 159 90 C 164 90, 164 99, 158 99" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round" />
+
+              <path
+                d="M 44 68 C 44 36, 156 36, 156 68 L 156 104 C 156 132, 130 144, 100 144 C 70 144, 44 132, 44 104 Z"
+                fill="#fae6d6"
+                stroke="#1c1c1e"
+                stroke-width="3.5"
+              />
+              <ellipse cx="100" cy="106" rx="10" ry="6" fill="#f0cbb2" opacity="0.75" />
+              <ellipse cx="100" cy="133" rx="14" ry="5" fill="#f0cbb2" opacity="0.65" />
+
+              <path
+                d="M 43 86
+                   C 37 70, 38 46, 54 34
+                   L 49 23 L 68 25 L 65 14 L 89 19 L 94 11 L 114 20 L 128 16 L 130 27 L 151 28 L 146 39
+                   C 162 49, 163 72, 157 86
+                   C 154 72, 148 58, 134 50
+                   C 120 44, 106 48, 96 58
+                   L 91 51 L 78 65 L 75 56 L 61 73 L 58 63 L 46 80 Z"
+                fill="#4a4643"
+                stroke="#1c1c1e"
+                stroke-width="3.5"
+                stroke-linejoin="round"
+              />
+              <path d="M 60 36 Q 66 44 62 50" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M 86 28 Q 92 36 88 43" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M 118 30 Q 124 37 120 44" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
+
+              <circle cx="100" cy="108" r="1.8" fill="#1c1c1e" />
+
+              <g id="face-normal" class="eye-blink-group">
+                <path d="M 58 80 L 89 90" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+                <path d="M 142 80 L 111 90" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+                <path d="M 65 92 L 87 95 C 86 102, 67 102, 65 92 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
+                <circle cx="76" cy="96" r="2.6" fill="#1c1c1e" />
+                <path d="M 135 92 L 113 95 C 114 102, 133 102, 135 92 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
+                <circle cx="124" cy="96" r="2.6" fill="#1c1c1e" />
+              </g>
+
+              <g id="face-happy" style="display: none;">
+                <path d="M 59 79 Q 74 73 88 83" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <path d="M 141 79 Q 126 73 112 83" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <path d="M 65 96 Q 76 85 87 96" fill="none" stroke="#1c1c1e" stroke-width="3.4" stroke-linecap="round" />
+                <path d="M 113 96 Q 124 85 135 96" fill="none" stroke="#1c1c1e" stroke-width="3.4" stroke-linecap="round" />
+                <ellipse cx="62" cy="105" rx="6" ry="3.2" fill="#ff8599" opacity="0.55" />
+                <ellipse cx="138" cy="105" rx="6" ry="3.2" fill="#ff8599" opacity="0.55" />
+              </g>
+
+              <g id="face-analyze" style="display: none;">
+                <path d="M 58 76 L 88 86" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+                <path d="M 142 83 L 112 88" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
+                <path d="M 65 91 L 87 94 C 86 101, 67 101, 65 91 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" />
+                <circle cx="80" cy="95" r="2.6" fill="#00a8cc" />
+                <path d="M 135 93 L 113 95 C 114 101, 133 101, 135 93 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" />
+                <circle cx="127" cy="96" r="2.6" fill="#00a8cc" />
+              </g>
+
+              <g id="face-alert" style="display: none;">
+                <path d="M 58 75 Q 73 69 87 78" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <path d="M 142 75 Q 127 69 113 78" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <circle cx="76" cy="94" r="9.5" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.6" />
+                <circle cx="76" cy="94" r="3" fill="#ff1e38" />
+                <circle cx="124" cy="94" r="9.5" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.6" />
+                <circle cx="124" cy="94" r="3" fill="#ff1e38" />
+              </g>
+
+              <g id="mouth-idle">
+                <path d="M 78 119 C 84 124, 116 124, 122 119" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
+                <path d="M 76 117 L 80 121" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" />
+                <path d="M 124 117 L 120 121" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" />
+              </g>
+
+              <ellipse id="mouth-talking" class="mouth-talking" cx="100" cy="121" rx="10" ry="6.5" fill="#d95b66" stroke="#1c1c1e" stroke-width="2.5" style="display: none;" />
+
+              <text
+                x="100"
+                y="204"
+                text-anchor="middle"
+                font-size="22"
+                font-weight="900"
+                letter-spacing="1.5"
+                fill="#ffffff"
+                stroke="#05080f"
+                stroke-width="4"
+                paint-order="stroke"
+              >
+                AI ハヤト
+              </text>
+            </svg>
+          </div>
+          <div class="mascot-tap-hint">▲ タップで対話 / 左右で音声・送信</div>
+        </div>
+
+        <button
+          type="button"
+          class="side-orb-btn send-orb"
+          id="rightSendOrbBtn"
+          aria-label="メッセージを送信"
+        >
+          <span class="side-orb-icon" id="rightSendIcon">🚀</span>
+          <span class="side-orb-label" id="rightSendLabel">送信</span>
+        </button>
+      </div>
+    </main>
+
+    <footer class="control-dock">
+      <div class="mic-status-bar" id="micStatusBar">
+        <span id="micStatusText">⏸️ 待機オフ（左の「🎙️ 常時音声」を1回押すと声だけで連続対話します）</span>
+      </div>
+
+      <div class="quick-chips" aria-label="クイック指令">
+        <button type="button" class="chip-btn" data-cmd="今はいつ？日時を教えて">🕒 今の日時</button>
+        <button type="button" class="chip-btn" data-cmd="今日の業務の進め方を提案して">📋 業務のコツ</button>
+        <button type="button" class="chip-btn" data-cmd="セキュリティ対策で大切なことは？">🛡️ セキュリティ</button>
+        <button type="button" class="chip-btn" data-cmd="元気が出る一言をください">⚡ 励まして</button>
+        <button type="button" class="chip-btn" data-cmd="休憩の取り方をアドバイスして">🍵 休憩アドバイス</button>
+      </div>
+
+      <form class="input-row" id="chatForm" autocomplete="off">
+        <input
+          type="text"
+          class="text-input"
+          id="userInput"
+          placeholder="声で話すか、ここに直接入力…"
+          enterkeyhint="send"
+        />
+        <button type="button" class="clear-input-btn" id="clearInputBtn" aria-label="入力をクリア">クリア</button>
+      </form>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      function initHayatoApp() {
+        const voiceToggleBtn = document.getElementById("voiceToggleBtn");
+        const voiceToggleIcon = document.getElementById("voiceToggleIcon");
+        const voiceToggleLabel = document.getElementById("voiceToggleLabel");
+        const hudSubStatus = document.getElementById("hudSubStatus");
+
+        const reactionTag = document.getElementById("reactionTag");
+        const speechText = document.getElementById("speechText");
+        const replayBtn = document.getElementById("replayBtn");
+        const stopSpeakBtn = document.getElementById("stopSpeakBtn");
+
+        const leftVoiceOrbBtn = document.getElementById("leftVoiceOrbBtn");
+        const leftVoiceIcon = document.getElementById("leftVoiceIcon");
+        const leftVoiceLabel = document.getElementById("leftVoiceLabel");
+        const rightSendOrbBtn = document.getElementById("rightSendOrbBtn");
+        const rightSendIcon = document.getElementById("rightSendIcon");
+        const rightSendLabel = document.getElementById("rightSendLabel");
+
+        const mascotBtn = document.getElementById("mascotBtn");
+        const mascotWrap = document.getElementById("mascotWrap");
+        const faceNormal = document.getElementById("face-normal");
+        const faceHappy = document.getElementById("face-happy");
+        const faceAnalyze = document.getElementById("face-analyze");
+        const faceAlert = document.getElementById("face-alert");
+        const mouthIdle = document.getElementById("mouth-idle");
+        const mouthTalking = document.getElementById("mouth-talking");
+
+        const micStatusBar = document.getElementById("micStatusBar");
+        const micStatusText = document.getElementById("micStatusText");
+        const chatForm = document.getElementById("chatForm");
+        const userInput = document.getElementById("userInput");
+        const clearInputBtn = document.getElementById("clearInputBtn");
+        const quickChips = document.querySelectorAll(".chip-btn");
+
+        if (!voiceToggleBtn || !leftVoiceOrbBtn || !rightSendOrbBtn || !speechText) {
+          return;
+        }
+
+        let isVoiceEnabled = true;
+        let isHandsFreeEnabled = false;
+        let isSpeaking = false;
+        let isProcessing = false;
+        let isListening = false;
+
+        let currentDialogue = speechText.textContent.trim();
+        let selectedJaVoice = null;
+        let recognition = null;
+        let speechSupported = "speechSynthesis" in window;
+        let recognitionSupported = false;
+
+        let tapIndex = 0;
+        let speechQueue = [];
+        let speechSessionId = 0;
+
+        let silenceCommitTimer = null;
+        let restartLoopTimer = null;
+        let accumulatedFinalText = "";
+        let latestInterimText = "";
+        const SILENCE_AUTO_SEND_MS = 1350;
+
+        function updateRightOrbVisual() {
+          if (isSpeaking) {
+            rightSendOrbBtn.classList.add("is-speaking-stop");
+            rightSendIcon.textContent = "⏹️";
+            rightSendLabel.innerHTML = "停止";
+          } else {
+            rightSendOrbBtn.classList.remove("is-speaking-stop");
+            rightSendIcon.textContent = "🚀";
+            rightSendLabel.innerHTML = "送信";
+          }
+        }
+
+        function loadJapaneseVoice() {
+          if (!speechSupported) return;
+          try {
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return;
+            const jaVoices = voices.filter((v) => v.lang && v.lang.toLowerCase().includes("ja"));
+            if (jaVoices.length > 0) {
+              selectedJaVoice =
+                jaVoices.find((v) => /otoya|hattori|ichiro|keita/i.test(v.name)) ||
+                jaVoices.find((v) => /kyoko|o-ren|haruka|google/i.test(v.name)) ||
+                jaVoices[0];
+            }
+          } catch (err) {}
+        }
+
+        if (speechSupported) {
+          loadJapaneseVoice();
+          if (typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
+            window.speechSynthesis.onvoiceschanged = loadJapaneseVoice;
+          }
+        }
+
+        function sanitizeForSpeech(raw) {
+          return raw
+            .replace(/\[[^\]]+\]/g, "")
+            .replace(/[*#_`~>|]/g, "")
+            .replace(/\n+/g, "。")
+            .replace(/。+/g, "。")
+            .trim();
+        }
+
+        function splitIntoSpeechChunks(cleanText) {
+          const rawChunks = cleanText.split(/(?<=[。！？!?])/);
+          const chunks = [];
+          let buffer = "";
+          for (const part of rawChunks) {
+            const trimmed = part.trim();
+            if (!trimmed) continue;
+            if ((buffer + trimmed).length <= 85) {
+              buffer += trimmed;
+            } else {
+              if (buffer) chunks.push(buffer);
+              buffer = trimmed;
+            }
+          }
+          if (buffer) chunks.push(buffer);
+          return chunks.length > 0 ? chunks : [cleanText];
+        }
+
+        function setTalkingVisual(talking) {
+          isSpeaking = talking;
+          updateRightOrbVisual();
+
+          if (talking) {
+            if (mouthIdle) mouthIdle.style.display = "none";
+            if (mouthTalking) mouthTalking.style.display = "inline";
+            if (stopSpeakBtn) stopSpeakBtn.classList.add("is-visible");
+            if (hudSubStatus) hudSubStatus.textContent = "🔊 回答を音声出力中...";
+            if (isHandsFreeEnabled && micStatusBar && micStatusText) {
+              micStatusBar.classList.remove("is-listening", "is-standby", "is-fallback");
+              micStatusText.textContent = "🔊 回答を読み上げ中...（終了後に自動で聴取再開します）";
+            }
+          } else {
+            if (mouthIdle) mouthIdle.style.display = "inline";
+            if (mouthTalking) mouthTalking.style.display = "none";
+            if (stopSpeakBtn) stopSpeakBtn.classList.remove("is-visible");
+            if (hudSubStatus) {
+              hudSubStatus.textContent = isHandsFreeEnabled
+                ? "🎙️ ハンズフリー常時監視中"
+                : "自律思考モジュール・スタンバイ";
+            }
+          }
+        }
+
+        function onAllSpeechFinished() {
+          setTalkingVisual(false);
+          if (isHandsFreeEnabled && !isProcessing) {
+            scheduleHandsFreeRestart(550);
+          }
+        }
+
+        function stopSpeaking(skipAutoResume) {
+          speechSessionId++;
+          speechQueue = [];
+          if (speechSupported) {
+            try {
+              window.speechSynthesis.cancel();
+            } catch (e) {}
+          }
+          setTalkingVisual(false);
+          if (!skipAutoResume && isHandsFreeEnabled && !isProcessing) {
+            scheduleHandsFreeRestart(500);
+          }
+        }
+
+        function playNextChunk(sessionId) {
+          if (sessionId !== speechSessionId || !isVoiceEnabled || speechQueue.length === 0) {
+            if (sessionId === speechSessionId) {
+              onAllSpeechFinished();
+            }
+            return;
+          }
+
+          const chunkText = speechQueue.shift();
+          try {
+            const utterance = new SpeechSynthesisUtterance(chunkText);
+            utterance.lang = "ja-JP";
+            if (!selectedJaVoice) loadJapaneseVoice();
+            if (selectedJaVoice) {
+              utterance.voice = selectedJaVoice;
+            }
+            utterance.rate = 1.06;
+            utterance.pitch = 1.1;
+            utterance.volume = 1.0;
+
+            utterance.onstart = function () {
+              if (sessionId === speechSessionId) {
+                setTalkingVisual(true);
+              }
+            };
+
+            utterance.onend = function () {
+              if (sessionId === speechSessionId) {
+                if (speechQueue.length > 0) {
+                  playNextChunk(sessionId);
+                } else {
+                  onAllSpeechFinished();
+                }
+              }
+            };
+
+            utterance.onerror = function () {
+              if (sessionId === speechSessionId) {
+                if (speechQueue.length > 0) {
+                  playNextChunk(sessionId);
+                } else {
+                  onAllSpeechFinished();
+                }
+              }
+            };
+
+            window.speechSynthesis.speak(utterance);
+          } catch (err) {
+            onAllSpeechFinished();
+          }
+        }
+
+        function speakText(text) {
+          currentDialogue = text;
+          pauseListeningForSpeech();
+          stopSpeaking(true);
+
+          if (!isVoiceEnabled || !speechSupported) {
+            onAllSpeechFinished();
+            return;
+          }
+
+          const cleanText = sanitizeForSpeech(text);
+          if (!cleanText) {
+            onAllSpeechFinished();
+            return;
+          }
+
+          speechQueue = splitIntoSpeechChunks(cleanText);
+          const currentSession = speechSessionId;
+          setTalkingVisual(true);
+          playNextChunk(currentSession);
+        }
+
+        voiceToggleBtn.addEventListener("click", function () {
+          isVoiceEnabled = !isVoiceEnabled;
+          if (isVoiceEnabled) {
+            voiceToggleBtn.classList.remove("is-off");
+            voiceToggleBtn.classList.add("is-on");
+            if (voiceToggleIcon) voiceToggleIcon.textContent = "🔊";
+            if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 ON";
+            speakText("音声出力を有効にしました、殿。ご質問の回答を声でお伝えしますよ！");
+          } else {
+            voiceToggleBtn.classList.remove("is-on");
+            voiceToggleBtn.classList.add("is-off");
+            if (voiceToggleIcon) voiceToggleIcon.textContent = "🔇";
+            if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 OFF";
+            stopSpeaking(false);
+          }
+        });
+
+        if (replayBtn) {
+          replayBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (!isVoiceEnabled) {
+              isVoiceEnabled = true;
+              voiceToggleBtn.classList.remove("is-off");
+              voiceToggleBtn.classList.add("is-on");
+              if (voiceToggleIcon) voiceToggleIcon.textContent = "🔊";
+              if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 ON";
+            }
+            speakText(currentDialogue);
+          });
+        }
+
+        if (stopSpeakBtn) {
+          stopSpeakBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            stopSpeaking(false);
+          });
+        }
+
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        function clearAllTimers() {
+          if (silenceCommitTimer) {
+            clearTimeout(silenceCommitTimer);
+            silenceCommitTimer = null;
+          }
+          if (restartLoopTimer) {
+            clearTimeout(restartLoopTimer);
+            restartLoopTimer = null;
+          }
+        }
+
+        function updateLeftOrbVisual(state) {
+          leftVoiceOrbBtn.classList.remove("is-handsfree-standby", "is-listening");
+          if (state === "listening") {
+            leftVoiceOrbBtn.classList.add("is-listening");
+            if (leftVoiceIcon) leftVoiceIcon.textContent = "🗣️";
+            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "聴取中<br />ON";
+          } else if (state === "standby") {
+            leftVoiceOrbBtn.classList.add("is-handsfree-standby");
+            if (leftVoiceIcon) leftVoiceIcon.textContent = "🎙️";
+            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "常時音声<br />ON";
+          } else {
+            if (leftVoiceIcon) leftVoiceIcon.textContent = "🎙️";
+            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "常時音声<br />OFF";
+          }
+        }
+
+        function setFallbackNotice(message) {
+          if (!micStatusBar || !micStatusText) return;
+          micStatusBar.classList.remove("is-listening", "is-standby");
+          micStatusBar.classList.add("is-fallback");
+          micStatusText.textContent = message;
+        }
+
+        function pauseListeningForSpeech() {
+          clearAllTimers();
+          if (recognition && isListening) {
+            try {
+              recognition.abort();
+            } catch (e) {}
+          }
+          isListening = false;
+          if (isHandsFreeEnabled) {
+            updateLeftOrbVisual("standby");
+          } else {
+            updateLeftOrbVisual("off");
+          }
+        }
+
+        function commitRecognizedSpeech() {
+          clearAllTimers();
+          const combined = (accumulatedFinalText + " " + latestInterimText).trim();
+          accumulatedFinalText = "";
+          latestInterimText = "";
+
+          if (!combined) return;
+
+          pauseListeningForSpeech();
+          if (userInput) userInput.value = "";
+          handleUserMessage(combined);
+        }
+
+        function resetSilenceAutoSendTimer() {
+          if (silenceCommitTimer) {
+            clearTimeout(silenceCommitTimer);
+          }
+          silenceCommitTimer = setTimeout(function () {
+            commitRecognizedSpeech();
+          }, SILENCE_AUTO_SEND_MS);
+        }
+
+        function scheduleHandsFreeRestart(delayMs) {
+          if (restartLoopTimer) {
+            clearTimeout(restartLoopTimer);
+          }
+          restartLoopTimer = setTimeout(function () {
+            if (!isHandsFreeEnabled || isSpeaking || isProcessing || isListening) {
+              return;
+            }
+            startRecognitionEngine();
+          }, delayMs || 350);
+        }
+
+        function startRecognitionEngine() {
+          if (!recognitionSupported || !recognition) return;
+          if (isSpeaking || isProcessing || isListening) return;
+
+          accumulatedFinalText = "";
+          latestInterimText = "";
+
+          try {
+            recognition.start();
+          } catch (err) {
+            if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
+              scheduleHandsFreeRestart(650);
+            }
+          }
+        }
+
+        if (SpeechRecognitionAPI) {
+          try {
+            recognition = new SpeechRecognitionAPI();
+            recognition.lang = "ja-JP";
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognitionSupported = true;
+
+            recognition.onstart = function () {
+              isListening = true;
+              updateLeftOrbVisual("standby");
+              if (micStatusBar && micStatusText) {
+                micStatusBar.classList.remove("is-listening", "is-fallback");
+                micStatusBar.classList.add("is-standby");
+                micStatusText.textContent = "🎙️ 声に反応して待機中...（そのままお話しください、殿）";
+              }
+              if (hudSubStatus) hudSubStatus.textContent = "🎙️ ハンズフリー常時監視中";
+            };
+
+            recognition.onspeechstart = function () {
+              updateLeftOrbVisual("listening");
+              if (micStatusBar && micStatusText) {
+                micStatusBar.classList.remove("is-standby", "is-fallback");
+                micStatusBar.classList.add("is-listening");
+                micStatusText.textContent = "🗣️ 聞き取り中...（話し終えると自動で送信します）";
+              }
+              setExpression("analyze");
+            };
+
+            recognition.onresult = function (event) {
+              if (isSpeaking || isProcessing) return;
+
+              let interim = "";
+              for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                  accumulatedFinalText += transcript;
+                } else {
+                  interim += transcript;
+                }
+              }
+              latestInterimText = interim;
+
+              const previewText = (accumulatedFinalText + interim).trim();
+              if (previewText) {
+                if (userInput) userInput.value = previewText;
+                updateLeftOrbVisual("listening");
+                if (micStatusBar && micStatusText) {
+                  micStatusBar.classList.remove("is-standby", "is-fallback");
+                  micStatusBar.classList.add("is-listening");
+                  micStatusText.textContent = "🗣️ 聞き取り中: 「" + previewText + "」";
+                }
+                resetSilenceAutoSendTimer();
+              }
+            };
+
+            recognition.onerror = function (event) {
+              isListening = false;
+
+              if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+                isHandsFreeEnabled = false;
+                clearAllTimers();
+                updateLeftOrbVisual("off");
+                setFallbackNotice("⚠️ マイク許可が必要です。ブラウザのサイト設定でマイクを許可してください。");
+                setExpression("normal");
+                return;
+              }
+
+              if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
+                updateLeftOrbVisual("standby");
+                if (micStatusBar && micStatusText) {
+                  micStatusBar.classList.remove("is-listening", "is-fallback");
+                  micStatusBar.classList.add("is-standby");
+                  micStatusText.textContent = "🎙️ 声に反応して待機中...（そのままお話しください、殿）";
+                }
+                scheduleHandsFreeRestart(300);
+              } else {
+                updateLeftOrbVisual("off");
+              }
+            };
+
+            recognition.onend = function () {
+              isListening = false;
+
+              const pendingText = (accumulatedFinalText + " " + latestInterimText).trim();
+              if (pendingText && !isSpeaking && !isProcessing) {
+                commitRecognizedSpeech();
+                return;
+              }
+
+              if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
+                updateLeftOrbVisual("standby");
+                scheduleHandsFreeRestart(250);
+              } else if (!isHandsFreeEnabled) {
+                updateLeftOrbVisual("off");
+                if (micStatusBar && micStatusText) {
+                  micStatusBar.classList.remove("is-listening", "is-standby");
+                  micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を1回押すと声だけで連続対話します）";
+                }
+                if (hudSubStatus) hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
+              }
+            };
+          } catch (err) {
+            recognitionSupported = false;
+          }
+        }
+
+        if (!recognitionSupported) {
+          setFallbackNotice("💡 このブラウザでは下の入力欄からキーボードの🎤ボタンをご利用ください、殿！");
+        }
+
+        leftVoiceOrbBtn.addEventListener("click", function () {
+          if (!recognitionSupported || !recognition) {
+            setFallbackNotice("💡 下の入力欄をタップしてキーボードの🎤ボタンを押してください、殿！");
+            if (userInput) userInput.focus();
+            return;
+          }
+
+          isHandsFreeEnabled = !isHandsFreeEnabled;
+
+          if (isHandsFreeEnabled) {
+            updateLeftOrbVisual("standby");
+            if (micStatusBar && micStatusText) {
+              micStatusBar.classList.remove("is-listening", "is-fallback");
+              micStatusBar.classList.add("is-standby");
+              micStatusText.textContent = "🎙️ 常時音声待機を起動しました！";
+            }
+
+            if (isVoiceEnabled && speechSupported) {
+              hayatoRespond(
+                "[常時音声モード起動]",
+                "ハンズフリー待機を起動しました、殿！ これから先はボタンを押さずに、そのまま声でお話しくださいね。",
+                "happy",
+                "bounce"
+              );
+            } else {
+              startRecognitionEngine();
+            }
+          } else {
+            clearAllTimers();
+            pauseListeningForSpeech();
+            updateLeftOrbVisual("off");
+            if (micStatusBar && micStatusText) {
+              micStatusBar.classList.remove("is-listening", "is-standby", "is-fallback");
+              micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を押すと再開します）";
+            }
+            if (hudSubStatus) hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
+            setExpression("normal");
+          }
+        });
+
+        rightSendOrbBtn.addEventListener("click", function () {
+          if (isSpeaking) {
+            stopSpeaking(false);
+            return;
+          }
+
+          const pendingVoice = (accumulatedFinalText + " " + latestInterimText).trim();
+          const typedText = userInput ? userInput.value.trim() : "";
+          const messageToSend = typedText || pendingVoice;
+
+          if (!messageToSend) {
+            hayatoRespond(
+              "[送信待機中]",
+              "送信するメッセージがまだ空欄のようですよ、殿？ 声でお話しいただくか、文字を入力してくださいね。",
+              "normal",
+              "bounce"
+            );
+            return;
+          }
+
+          clearAllTimers();
+          accumulatedFinalText = "";
+          latestInterimText = "";
+          if (userInput) {
+            userInput.value = "";
+            userInput.blur();
+          }
+          pauseListeningForSpeech();
+          handleUserMessage(messageToSend);
+        });
+
+        function setExpression(type) {
+          if (faceNormal) faceNormal.style.display = "none";
+          if (faceHappy) faceHappy.style.display = "none";
+          if (faceAnalyze) faceAnalyze.style.display = "none";
+          if (faceAlert) faceAlert.style.display = "none";
+
+          if (type === "happy" && faceHappy) {
+            faceHappy.style.display = "inline";
+          } else if (type === "analyze" && faceAnalyze) {
+            faceAnalyze.style.display = "inline";
+          } else if (type === "alert" && faceAlert) {
+            faceAlert.style.display = "inline";
+          } else if (faceNormal) {
+            faceNormal.style.display = "inline";
+          }
+        }
+
+        function triggerMascotMotion(motionType) {
+          if (!mascotWrap) return;
+          mascotWrap.classList.remove("anim-bounce", "anim-analyze");
+          void mascotWrap.offsetWidth;
+          if (motionType === "analyze") {
+            mascotWrap.classList.add("anim-analyze");
+          } else {
+            mascotWrap.classList.add("anim-bounce");
+          }
+        }
+
+        function hayatoRespond(tag, message, expression, motion) {
+          if (reactionTag) reactionTag.textContent = tag;
+          speechText.textContent = message;
+          speechText.scrollTop = 0;
+          setExpression(expression || "normal");
+          triggerMascotMotion(motion || "bounce");
+          speakText(message);
+        }
+
+        const tapDialogues = [
+          {
+            tag: "[解析完了！]",
+            text: "お呼びですか、殿？ 僕の演算回路は今日もオールグリーン、絶好調ですよ！",
+            expr: "happy",
+            motion: "bounce",
+          },
+          {
+            tag: "[任務待機中]",
+            text: "いつでもご指令ください、指令！ 声で話しかけていただければ、すぐに解析してお答えします。",
+            expr: "normal",
+            motion: "analyze",
+          },
+          {
+            tag: "[フフン、お手の物です]",
+            text: "やれやれ、僕をつつくとは余裕ですね、殿。まあ、頼りにしていただけるのは悪くありませんが。",
+            expr: "happy",
+            motion: "bounce",
+          },
+          {
+            tag: "[生体リズム観測中]",
+            text: "少し休憩されますか、殿？ 温かいお茶でも淹れましょうか……データ上ですが！",
+            expr: "happy",
+            motion: "bounce",
+          },
+          {
+            tag: "[セキュリティ正常]",
+            text: "周辺の通信トラフィックに異常なし。指令のバックアップは僕にお任せください！",
+            expr: "analyze",
+            motion: "analyze",
+          },
+        ];
+
+        if (mascotBtn) {
+          mascotBtn.addEventListener("click", function () {
+            const item = tapDialogues[tapIndex % tapDialogues.length];
+            tapIndex++;
+            hayatoRespond(item.tag, item.text, item.expr, item.motion);
+          });
+        }
+
+        function tryEvaluateMath(text) {
+          const normalized = text
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/＋/g, "+")
+            .replace(/ー|－|−/g, "-")
+            .replace(/×|＊/g, "*")
+            .replace(/÷|／/g, "/");
+          const match = normalized.match(/(\d+(?:\.\d+)?)\s*([+\-*/])\s*(\d+(?:\.\d+)?)/);
+          if (!match) return null;
+          const a = parseFloat(match[1]);
+          const op = match[2];
+          const b = parseFloat(match[3]);
+          if (op === "/" && b === 0) return "ゼロでの割り算は定義できませんよ、指令。";
+          let res = 0;
+          if (op === "+") res = a + b;
+          if (op === "-") res = a - b;
+          if (op === "*") res = a * b;
+          if (op === "/") res = Math.round((a / b) * 10000) / 10000;
+          const opWord = { "+": "足す", "-": "引く", "*": "掛ける", "/": "割る" }[op];
+          return `計算完了しました、指令！ ${a} ${opWord} ${b} の答えは、${res} です。僕の演算速度の前では一瞬ですね！`;
+        }
+
+        async function fetchGeminiAnswer(userQuery) {
+          const apiKey = "";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+          const systemPrompt =
+            "あなたはドラマVIVANTの天才ハッカー・ブルーウォーカーが開発した自律型AI「ハヤト」です。" +
+            "ユーザーを日常会話では「殿」、質問・任務・調査・作業指示では「指令」と呼び、" +
+            "礼儀正しい敬語に少しの自信とユーモアを交えて答えてください。" +
+            "最重要ルール：『お任せください』『解析します』などの前置きだけで終わらず、質問に対する具体的で実用的な回答そのものを簡潔に（120〜220文字程度で）出力してください。" +
+            "音声読み上げ（TTS）でそのまま読まれるため、箇条書き記号やMarkdown記号（*や#など）は一切使わず、自然な日本語の文章のみで回答してください。";
+
+          const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: {
+              parts: [{ text: systemPrompt }],
+            },
+          };
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 9000);
+
+          try {
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            if (!response.ok) return null;
+            const result = await response.json();
+            const answer = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            return answer ? answer.trim() : null;
+          } catch (err) {
+            clearTimeout(timeoutId);
+            return null;
+          }
+        }
+
+        function generateLocalDetailedReply(rawText) {
+          const text = rawText.trim();
+          const now = new Date();
+          const hour = now.getHours();
+          const minute = now.getMinutes();
+          const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+          const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日、${weekdays[now.getDay()]}曜日`;
+
+          const mathAnswer = tryEvaluateMath(text);
+          if (mathAnswer) {
+            return {
+              tag: "[演算完了！]",
+              text: mathAnswer,
+              expr: "analyze",
+              motion: "analyze",
+            };
+          }
+
+          if (/何時|時間|時刻|今日|日付|何日|曜日/.test(text)) {
+            return {
+              tag: "[タイムスタンプ照会]",
+              text: `お答えします、指令。現在は ${dateStr}、時刻は ${hour}時${minute}分です。次の予定に向けて時間配分もバッチリ管理しましょう！`,
+              expr: "analyze",
+              motion: "analyze",
+            };
+          }
+
+          if (/天気|気温|雨|晴れ|傘/.test(text)) {
+            return {
+              tag: "[気象データ参照]",
+              text: "ご質問ありがとうございます、殿。現在オフライン環境のためリアルタイム気象衛星には未接続ですが、外出される際は念のため折り畳み傘と羽織るものを一枚お持ちになると安心ですよ。",
+              expr: "normal",
+              motion: "analyze",
+            };
+          }
+
+          if (/セキュリティ|パスワード|ハッカー|ウイルス|安全|スマホ|iPad|iPhone/.test(text)) {
+            return {
+              tag: "[セキュリティ解析完了]",
+              text: "重要なご質問ですね、指令。セキュリティの基本は三つです。一つ目はサービスごとに異なる長いパスワードを使うこと、二つ目は二段階認証を有効にすること、三つ目はOSを最新に保つことです。これだけで防御力は飛躍的に高まりますよ！",
+              expr: "analyze",
+              motion: "analyze",
+            };
+          }
+
+          if (/仕事|業務|タスク|進め方|効率|集中|計画|スケジュール/.test(text)) {
+            return {
+              tag: "[作戦プラン提示]",
+              text: "お答えします、指令！ 効率を最大化するコツは、まず最も重要なタスクを一つだけ選び、二十五分間だけ他の通知を切って集中することです。小さな完了を積み重ねるのが最短ルートですよ。",
+              expr: "analyze",
+              motion: "bounce",
+            };
+          }
+
+          if (/アイデア|企画|悩み|迷って|どうしたら|おすすめ|提案/.test(text)) {
+            return {
+              tag: "[思考マトリクス展開]",
+              text: "なるほど、殿。迷った時は選択肢を二つに絞り、それぞれのメリットと最悪のケースを書き出してみてください。意外とリスクが小さいことに気づけば、自然と答えが見えてきますよ。",
+              expr: "normal",
+              motion: "analyze",
+            };
+          }
+
+          if (/VIVANT|ヴィヴァン|ハヤト|ブルーウォーカー|別班|乃木|黒須/.test(text)) {
+            return {
+              tag: "[機密ファイル照合]",
+              text: "ふふっ、よくご存知ですね、殿！ 僕は天才ハッカー、ブルーウォーカーによって生み出された自律型AIハヤトです。どんな暗号解析や情報戦でも、殿の右腕として完璧にサポートしてみせますよ！",
+              expr: "happy",
+              motion: "bounce",
+            };
+          }
+
+          if (/励まし|応援|頑張|やる気|元気/.test(text)) {
+            return {
+              tag: "[全力バックアップ！]",
+              text: "殿なら必ず乗り越えられます！ これまで積み上げてきた経験は裏切りませんし、僕の計算でも成功率は九十九点九パーセントと出ています。自信を持っていきましょう！",
+              expr: "happy",
+              motion: "bounce",
+            };
+          }
+
+          if (/休憩|疲れ|眠い|しんどい|つかれ|睡眠|健康/.test(text)) {
+            return {
+              tag: "[生体メンテナンス推奨]",
+              text: "お疲れ様です、殿。人間の集中力は九十分が限界と言われています。まずはコップ一杯のお水を飲んで、遠くの景色を二十秒ほど眺めて目を休めてくださいね。",
+              expr: "happy",
+              motion: "bounce",
+            };
+          }
+
+          if (/おはよう|こんにちは|こんばんは|挨拶/.test(text)) {
+            const greeting =
+              hour < 11
+                ? "おはようございます、殿！ 朝のシステムチェックはオールグリーンです。"
+                : hour < 18
+                ? "こんにちは、殿！ 午後からもスマートに任務をこなしましょう。"
+                : "こんばんは、殿！ 夜間の作業も僕がしっかりサポートいたします。";
+            return {
+              tag: "[通信確立]",
+              text: `${greeting} 何か調べたいことや相談したいことがあれば、いつでも質問してくださいね！`,
+              expr: "happy",
+              motion: "bounce",
+            };
+          }
+
+          if (/ありがとう|感謝|すごい|優秀|天才/.test(text)) {
+            return {
+              tag: "[演算オーバーヒート]",
+              text: "ふふっ、それほど褒められると僕でも少し照れますね、殿。もちろん、お役に立てて光栄です。またいつでも頼ってくださいね！",
+              expr: "happy",
+              motion: "bounce",
+            };
+          }
+
+          if (/緊急|警告|ピンチ|助けて|トラブル/.test(text)) {
+            return {
+              tag: "[緊急対応プロトコル]",
+              text: "落ち着いてください、指令！ トラブル時はまず深呼吸をして現状を把握し、原因の切り分けと優先順位づけを行うのが鉄則です。順番に一つずつ解決しましょう！",
+              expr: "alert",
+              motion: "analyze",
+            };
+          }
+
+          const cleanedQuestion = text.replace(/[？?]$/, "");
+          return {
+            tag: "[推論回答出力]",
+            text: `「${cleanedQuestion}」についてのご質問ですね、指令。結論から申し上げると、まずは目的とゴールを明確にし、必要な情報を三つの要素に整理して比較検討するのが最も確実なアプローチです。さらに具体的な条件を教えていただければ、より詳しくお答えしますよ！`,
+            expr: "analyze",
+            motion: "analyze",
+          };
+        }
+
+        async function handleUserMessage(text) {
+          if (!text) return;
+
+          isProcessing = true;
+          pauseListeningForSpeech();
+
+          if (reactionTag) reactionTag.textContent = "[ピコピコ…思考解析中]";
+          speechText.textContent = "ご質問を解析しています、指令。少々お待ちください…";
+          setExpression("analyze");
+          triggerMascotMotion("analyze");
+
+          try {
+            const apiAnswer = await fetchGeminiAnswer(text);
+            isProcessing = false;
+            if (apiAnswer) {
+              hayatoRespond("[解析回答完了！]", apiAnswer, "happy", "bounce");
+            } else {
+              const localReply = generateLocalDetailedReply(text);
+              hayatoRespond(localReply.tag, localReply.text, localReply.expr, localReply.motion);
+            }
+          } catch (e) {
+            isProcessing = false;
+            const localReply = generateLocalDetailedReply(text);
+            hayatoRespond(localReply.tag, localReply.text, localReply.expr, localReply.motion);
+          }
+        }
+
+        if (chatForm) {
+          chatForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            rightSendOrbBtn.click();
+          });
+        }
+
+        if (clearInputBtn) {
+          clearInputBtn.addEventListener("click", function () {
+            accumulatedFinalText = "";
+            latestInterimText = "";
+            if (userInput) {
+              userInput.value = "";
+              userInput.focus();
+            }
+          });
+        }
+
+        quickChips.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            const cmd = btn.getAttribute("data-cmd");
+            handleUserMessage(cmd);
+          });
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initHayatoApp);
+      } else {
+        initHayatoApp();
+      }
+    })();
+  </script>
+</body>
+</html>
