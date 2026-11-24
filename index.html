@@ -17,6 +17,7 @@
       --text-sub: #7fb8cc;
       --alert-red: #ff3366;
       --alert-glow: rgba(255, 51, 102, 0.5);
+      --online-green: #00ffaa;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -80,8 +81,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 8px 12px;
+      gap: 6px;
+      padding: 8px 10px;
       background: var(--bg-panel);
       border: 1px solid rgba(0, 240, 255, 0.35);
       border-radius: 14px;
@@ -105,6 +106,12 @@
       box-shadow: 0 0 10px #ff1e38;
       animation: pulseDot 2s infinite ease-in-out;
       flex-shrink: 0;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .status-dot.is-online {
+      background-color: var(--online-green);
+      box-shadow: 0 0 12px var(--online-green);
     }
 
     .hud-title-group {
@@ -114,9 +121,9 @@
     }
 
     .hud-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       color: var(--cyan-main);
       text-shadow: 0 0 8px var(--cyan-glow);
       white-space: nowrap;
@@ -130,22 +137,55 @@
       text-overflow: ellipsis;
     }
 
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .brain-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 34px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1.5px solid #ffd166;
+      background: rgba(255, 209, 102, 0.14);
+      color: #ffd166;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .brain-btn.is-connected {
+      border-color: var(--online-green);
+      background: rgba(0, 255, 170, 0.14);
+      color: var(--online-green);
+    }
+
+    .brain-btn:active {
+      transform: scale(0.95);
+    }
+
     .voice-toggle-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      min-height: 36px;
-      padding: 6px 12px;
+      gap: 4px;
+      min-height: 34px;
+      padding: 5px 10px;
       border-radius: 999px;
       border: 1.5px solid var(--cyan-main);
       background: rgba(0, 240, 255, 0.14);
       color: var(--cyan-main);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
-      flex-shrink: 0;
     }
 
     .voice-toggle-btn.is-off {
@@ -516,7 +556,114 @@
       transform: scale(0.95);
     }
 
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(2, 6, 15, 0.82);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-backdrop.is-open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 440px;
+      background: #07162b;
+      border: 1.5px solid var(--cyan-main);
+      border-radius: 20px;
+      padding: 20px 18px;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.28);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--cyan-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #d6eef8;
+    }
+
+    .modal-desc a {
+      color: #ffd166;
+      text-decoration: underline;
+    }
+
+    .api-key-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0, 240, 255, 0.5);
+      background: #020913;
+      color: #ffffff;
+      font-size: 15px;
+      font-family: monospace;
+      outline: none;
+      user-select: text;
+    }
+
+    .api-key-input:focus {
+      border-color: var(--online-green);
+    }
+
+    .modal-btn-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .modal-btn {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .modal-btn-cancel {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(127, 184, 204, 0.35);
+      color: var(--text-sub);
+    }
+
+    .modal-btn-clear {
+      background: rgba(255, 51, 102, 0.16);
+      border-color: var(--alert-red);
+      color: #ff85a2;
+      margin-right: auto;
+    }
+
+    .modal-btn-save {
+      background: linear-gradient(135deg, #00d2ff, #1d7dff);
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(0, 210, 255, 0.4);
+    }
+
     @media (max-width: 390px) {
+      .hud-title {
+        font-size: 12px;
+      }
       .mascot-stage-row {
         gap: 6px;
       }
@@ -646,16 +793,22 @@
   <div class="app-shell">
     <header class="hud-header">
       <div class="hud-brand">
-        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-dot" id="statusDot" aria-hidden="true"></span>
         <div class="hud-title-group">
           <div class="hud-title">SYSTEM // AI HAYATO</div>
           <div class="hud-sub" id="hudSubStatus">自律思考モジュール・スタンバイ</div>
         </div>
       </div>
-      <button type="button" class="voice-toggle-btn is-on" id="voiceToggleBtn" aria-label="音声出力の切り替え">
-        <span id="voiceToggleIcon">🔊</span>
-        <span id="voiceToggleLabel">音声 ON</span>
-      </button>
+      <div class="hud-actions">
+        <button type="button" class="brain-btn" id="openBrainModalBtn" aria-label="AI頭脳の接続設定">
+          <span id="brainBtnIcon">🧠</span>
+          <span id="brainBtnLabel">頭脳未接続</span>
+        </button>
+        <button type="button" class="voice-toggle-btn is-on" id="voiceToggleBtn" aria-label="音声出力の切り替え">
+          <span id="voiceToggleIcon">🔊</span>
+          <span id="voiceToggleLabel">音声 ON</span>
+        </button>
+      </div>
     </header>
 
     <main class="stage-area">
@@ -774,9 +927,9 @@
               <g id="face-analyze" style="display: none;">
                 <path d="M 58 76 L 88 86" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
                 <path d="M 142 83 L 112 88" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M 65 91 L 87 94 C 86 101, 67 101, 65 91 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" />
+                <path d="M 65 91 L 87 94 C 86 101, 67 101, 65 91 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
                 <circle cx="80" cy="95" r="2.6" fill="#00a8cc" />
-                <path d="M 135 93 L 113 95 C 114 101, 133 101, 135 93 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" />
+                <path d="M 135 93 L 113 95 C 114 101, 133 101, 135 93 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
                 <circle cx="127" cy="96" r="2.6" fill="#00a8cc" />
               </g>
 
@@ -854,11 +1007,47 @@
     </footer>
   </div>
 
+  <div class="modal-backdrop" id="brainModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="brainModalTitle">
+    <div class="modal-card">
+      <div class="modal-title" id="brainModalTitle">🧠 インターネットAI頭脳（Gemini API）の接続</div>
+      <div class="modal-desc">
+        Google AI Studio（<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a>）で無料発行した
+        <strong>AIza...</strong> から始まるAPIキーを貼り付けて「接続する」を押してください。<br />
+        ※キーはお使いのiPad/iPhoneの中だけに安全に保存され、外部に公開されません。
+      </div>
+      <input
+        type="password"
+        class="api-key-input"
+        id="apiKeyInput"
+        placeholder="AIzaSy... をここに貼り付け"
+        autocomplete="off"
+      />
+      <div class="modal-btn-row">
+        <button type="button" class="modal-btn modal-btn-clear" id="clearApiKeyBtn">解除</button>
+        <button type="button" class="modal-btn modal-btn-cancel" id="closeBrainModalBtn">閉じる</button>
+        <button type="button" class="modal-btn modal-btn-save" id="saveApiKeyBtn">接続する</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       "use strict";
 
       function initHayatoApp() {
+        const STORAGE_KEY_API = "hayato_gemini_api_key_v1";
+
+        const statusDot = document.getElementById("statusDot");
+        const openBrainModalBtn = document.getElementById("openBrainModalBtn");
+        const brainBtnIcon = document.getElementById("brainBtnIcon");
+        const brainBtnLabel = document.getElementById("brainBtnLabel");
+
+        const brainModalBackdrop = document.getElementById("brainModalBackdrop");
+        const apiKeyInput = document.getElementById("apiKeyInput");
+        const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
+        const closeBrainModalBtn = document.getElementById("closeBrainModalBtn");
+        const clearApiKeyBtn = document.getElementById("clearApiKeyBtn");
+
         const voiceToggleBtn = document.getElementById("voiceToggleBtn");
         const voiceToggleIcon = document.getElementById("voiceToggleIcon");
         const voiceToggleLabel = document.getElementById("voiceToggleLabel");
@@ -901,6 +1090,7 @@
         let isSpeaking = false;
         let isProcessing = false;
         let isListening = false;
+        let conversationHistory = [];
 
         let currentDialogue = speechText.textContent.trim();
         let selectedJaVoice = null;
@@ -917,6 +1107,97 @@
         let accumulatedFinalText = "";
         let latestInterimText = "";
         const SILENCE_AUTO_SEND_MS = 1350;
+
+        function getSavedApiKey() {
+          try {
+            return (localStorage.getItem(STORAGE_KEY_API) || "").trim();
+          } catch (e) {
+            return "";
+          }
+        }
+
+        function updateBrainConnectionUI() {
+          const hasKey = getSavedApiKey().length > 10;
+          if (hasKey) {
+            if (statusDot) statusDot.classList.add("is-online");
+            if (openBrainModalBtn) openBrainModalBtn.classList.add("is-connected");
+            if (brainBtnIcon) brainBtnIcon.textContent = "🟢";
+            if (brainBtnLabel) brainBtnLabel.textContent = "AI接続中";
+            if (hudSubStatus && !isHandsFreeEnabled && !isSpeaking) {
+              hudSubStatus.textContent = "オンラインAI頭脳・直結完了";
+            }
+          } else {
+            if (statusDot) statusDot.classList.remove("is-online");
+            if (openBrainModalBtn) openBrainModalBtn.classList.remove("is-connected");
+            if (brainBtnIcon) brainBtnIcon.textContent = "🧠";
+            if (brainBtnLabel) brainBtnLabel.textContent = "頭脳未接続";
+            if (hudSubStatus && !isHandsFreeEnabled && !isSpeaking) {
+              hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
+            }
+          }
+        }
+
+        updateBrainConnectionUI();
+
+        if (openBrainModalBtn) {
+          openBrainModalBtn.addEventListener("click", function () {
+            if (apiKeyInput) apiKeyInput.value = getSavedApiKey();
+            if (brainModalBackdrop) brainModalBackdrop.classList.add("is-open");
+          });
+        }
+
+        if (closeBrainModalBtn) {
+          closeBrainModalBtn.addEventListener("click", function () {
+            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
+          });
+        }
+
+        if (brainModalBackdrop) {
+          brainModalBackdrop.addEventListener("click", function (e) {
+            if (e.target === brainModalBackdrop) {
+              brainModalBackdrop.classList.remove("is-open");
+            }
+          });
+        }
+
+        if (saveApiKeyBtn) {
+          saveApiKeyBtn.addEventListener("click", function () {
+            const rawKey = apiKeyInput ? apiKeyInput.value.trim() : "";
+            if (!rawKey || rawKey.length < 15) {
+              if (micStatusText) micStatusText.textContent = "⚠️ AIza... から始まる有効なAPIキーを入力してください";
+              return;
+            }
+            try {
+              localStorage.setItem(STORAGE_KEY_API, rawKey);
+            } catch (e) {}
+            updateBrainConnectionUI();
+            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
+            hayatoRespond(
+              "[オンラインAI頭脳・接続完了！]",
+              "インターネットのAI頭脳との直結が完了しました、殿！ これで天気でも日常の雑談でも、どんなご質問にも自由にお答えできますよ！",
+              "happy",
+              "bounce"
+            );
+          });
+        }
+
+        if (clearApiKeyBtn) {
+          clearApiKeyBtn.addEventListener("click", function () {
+            try {
+              localStorage.removeItem(STORAGE_KEY_API);
+            } catch (e) {}
+            if (apiKeyInput) apiKeyInput.value = "";
+            conversationHistory = [];
+            updateBrainConnectionUI();
+            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
+            hayatoRespond(
+              "[オフライン待機へ切替]",
+              "APIキーを解除し、ローカル待機モードへ戻しました、殿。",
+              "normal",
+              "bounce"
+            );
+          });
+        }
 
         function updateRightOrbVisual() {
           if (isSpeaking) {
@@ -996,10 +1277,9 @@
             if (mouthIdle) mouthIdle.style.display = "inline";
             if (mouthTalking) mouthTalking.style.display = "none";
             if (stopSpeakBtn) stopSpeakBtn.classList.remove("is-visible");
-            if (hudSubStatus) {
-              hudSubStatus.textContent = isHandsFreeEnabled
-                ? "🎙️ ハンズフリー常時監視中"
-                : "自律思考モジュール・スタンバイ";
+            updateBrainConnectionUI();
+            if (isHandsFreeEnabled && hudSubStatus) {
+              hudSubStatus.textContent = "🎙️ ハンズフリー常時監視中";
             }
           }
         }
@@ -1338,7 +1618,7 @@
                   micStatusBar.classList.remove("is-listening", "is-standby");
                   micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を1回押すと声だけで連続対話します）";
                 }
-                if (hudSubStatus) hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
+                updateBrainConnectionUI();
               }
             };
           } catch (err) {
@@ -1385,7 +1665,7 @@
               micStatusBar.classList.remove("is-listening", "is-standby", "is-fallback");
               micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を押すと再開します）";
             }
-            if (hudSubStatus) hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
+            updateBrainConnectionUI();
             setExpression("normal");
           }
         });
@@ -1522,24 +1802,44 @@
         }
 
         async function fetchGeminiAnswer(userQuery) {
-          const apiKey = "";
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+          const apiKey = getSavedApiKey();
+          if (!apiKey) return { status: "NO_KEY", text: null };
+
+          const now = new Date();
+          const nowInfo = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}時${now.getMinutes()}分`;
+
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
           const systemPrompt =
-            "あなたはドラマVIVANTの天才ハッカー・ブルーウォーカーが開発した自律型AI「ハヤト」です。" +
-            "ユーザーを日常会話では「殿」、質問・任務・調査・作業指示では「指令」と呼び、" +
-            "礼儀正しい敬語に少しの自信とユーモアを交えて答えてください。" +
-            "最重要ルール：『お任せください』『解析します』などの前置きだけで終わらず、質問に対する具体的で実用的な回答そのものを簡潔に（120〜220文字程度で）出力してください。" +
-            "音声読み上げ（TTS）でそのまま読まれるため、箇条書き記号やMarkdown記号（*や#など）は一切使わず、自然な日本語の文章のみで回答してください。";
+            "あなたは天才ハッカーが開発した自律型AIマスコット「ハヤト」です。" +
+            "ユーザーを日常の雑談や労いでは「殿」、仕事・調査・タスクの指示では「指令」と呼び、" +
+            "礼儀正しく温かみのある敬語に、少しの自信とユーモアを交えて親身に寄り添って答えてください。" +
+            `現在の日時は ${nowInfo} です。` +
+            "最重要ルール：『お任せください』『解析します』などの前置きだけで終わらず、質問や気持ちに寄り添った具体的な返答を100〜220文字程度で出力してください。" +
+            "音声読み上げ（TTS）でそのまま読まれるため、箇条書き記号やMarkdown記号（*や#など）は一切使わず、自然な日本語の話し言葉のみで回答してください。";
+
+          const contents = [];
+          const recentHistory = conversationHistory.slice(-6);
+          for (const item of recentHistory) {
+            contents.push({
+              role: item.role,
+              parts: [{ text: item.text }],
+            });
+          }
+          contents.push({
+            role: "user",
+            parts: [{ text: userQuery }],
+          });
 
           const payload = {
-            contents: [{ parts: [{ text: userQuery }] }],
+            contents: contents,
             systemInstruction: {
               parts: [{ text: systemPrompt }],
             },
+            tools: [{ googleSearch: {} }],
           };
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 9000);
+          const timeoutId = setTimeout(() => controller.abort(), 14000);
 
           try {
             const response = await fetch(apiUrl, {
@@ -1549,13 +1849,26 @@
               signal: controller.signal,
             });
             clearTimeout(timeoutId);
-            if (!response.ok) return null;
+
+            if (!response.ok) {
+              if (response.status === 400 || response.status === 403) {
+                return { status: "INVALID_KEY", text: null };
+              }
+              return { status: "API_ERROR", text: null };
+            }
+
             const result = await response.json();
             const answer = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-            return answer ? answer.trim() : null;
+            if (answer && answer.trim()) {
+              const cleanAnswer = answer.trim();
+              conversationHistory.push({ role: "user", text: userQuery });
+              conversationHistory.push({ role: "model", text: cleanAnswer });
+              return { status: "OK", text: cleanAnswer };
+            }
+            return { status: "EMPTY", text: null };
           } catch (err) {
             clearTimeout(timeoutId);
-            return null;
+            return { status: "NETWORK_ERROR", text: null };
           }
         }
 
@@ -1589,7 +1902,7 @@
           if (/天気|気温|雨|晴れ|傘/.test(text)) {
             return {
               tag: "[気象データ参照]",
-              text: "ご質問ありがとうございます、殿。現在オフライン環境のためリアルタイム気象衛星には未接続ですが、外出される際は念のため折り畳み傘と羽織るものを一枚お持ちになると安心ですよ。",
+              text: "ご質問ありがとうございます、殿。右上の「🧠 頭脳未接続」ボタンからAPIキーを接続していただくと、最新の天気予報もリアルタイムでお調べできるようになりますよ！",
               expr: "normal",
               motion: "analyze",
             };
@@ -1609,24 +1922,6 @@
               tag: "[作戦プラン提示]",
               text: "お答えします、指令！ 効率を最大化するコツは、まず最も重要なタスクを一つだけ選び、二十五分間だけ他の通知を切って集中することです。小さな完了を積み重ねるのが最短ルートですよ。",
               expr: "analyze",
-              motion: "bounce",
-            };
-          }
-
-          if (/アイデア|企画|悩み|迷って|どうしたら|おすすめ|提案/.test(text)) {
-            return {
-              tag: "[思考マトリクス展開]",
-              text: "なるほど、殿。迷った時は選択肢を二つに絞り、それぞれのメリットと最悪のケースを書き出してみてください。意外とリスクが小さいことに気づけば、自然と答えが見えてきますよ。",
-              expr: "normal",
-              motion: "analyze",
-            };
-          }
-
-          if (/VIVANT|ヴィヴァン|ハヤト|ブルーウォーカー|別班|乃木|黒須/.test(text)) {
-            return {
-              tag: "[機密ファイル照合]",
-              text: "ふふっ、よくご存知ですね、殿！ 僕は天才ハッカー、ブルーウォーカーによって生み出された自律型AIハヤトです。どんな暗号解析や情報戦でも、殿の右腕として完璧にサポートしてみせますよ！",
-              expr: "happy",
               motion: "bounce",
             };
           }
@@ -1658,34 +1953,16 @@
                 : "こんばんは、殿！ 夜間の作業も僕がしっかりサポートいたします。";
             return {
               tag: "[通信確立]",
-              text: `${greeting} 何か調べたいことや相談したいことがあれば、いつでも質問してくださいね！`,
+              text: `${greeting} 右上の「🧠 頭脳未接続」ボタンからAPIキーを繋いでいただければ、どんな会話でも自由にできるようになりますよ！`,
               expr: "happy",
               motion: "bounce",
-            };
-          }
-
-          if (/ありがとう|感謝|すごい|優秀|天才/.test(text)) {
-            return {
-              tag: "[演算オーバーヒート]",
-              text: "ふふっ、それほど褒められると僕でも少し照れますね、殿。もちろん、お役に立てて光栄です。またいつでも頼ってくださいね！",
-              expr: "happy",
-              motion: "bounce",
-            };
-          }
-
-          if (/緊急|警告|ピンチ|助けて|トラブル/.test(text)) {
-            return {
-              tag: "[緊急対応プロトコル]",
-              text: "落ち着いてください、指令！ トラブル時はまず深呼吸をして現状を把握し、原因の切り分けと優先順位づけを行うのが鉄則です。順番に一つずつ解決しましょう！",
-              expr: "alert",
-              motion: "analyze",
             };
           }
 
           const cleanedQuestion = text.replace(/[？?]$/, "");
           return {
-            tag: "[推論回答出力]",
-            text: `「${cleanedQuestion}」についてのご質問ですね、指令。結論から申し上げると、まずは目的とゴールを明確にし、必要な情報を三つの要素に整理して比較検討するのが最も確実なアプローチです。さらに具体的な条件を教えていただければ、より詳しくお答えしますよ！`,
+            tag: "[ローカル待機応答]",
+            text: `「${cleanedQuestion}」ですね、殿。今はまだインターネットのAI頭脳が未接続のため定型モードでお答えしています。右上の「🧠 頭脳未接続」ボタンを押してAPIキーを接続すると、どんな話題にも寄り添って自由にお答えできますよ！`,
             expr: "analyze",
             motion: "analyze",
           };
@@ -1698,15 +1975,23 @@
           pauseListeningForSpeech();
 
           if (reactionTag) reactionTag.textContent = "[ピコピコ…思考解析中]";
-          speechText.textContent = "ご質問を解析しています、指令。少々お待ちください…";
+          speechText.textContent = "ご質問を解析しています、殿。少々お待ちください…";
           setExpression("analyze");
           triggerMascotMotion("analyze");
 
           try {
-            const apiAnswer = await fetchGeminiAnswer(text);
+            const apiResult = await fetchGeminiAnswer(text);
             isProcessing = false;
-            if (apiAnswer) {
-              hayatoRespond("[解析回答完了！]", apiAnswer, "happy", "bounce");
+
+            if (apiResult.status === "OK" && apiResult.text) {
+              hayatoRespond("[オンラインAI回答]", apiResult.text, "happy", "bounce");
+            } else if (apiResult.status === "INVALID_KEY") {
+              hayatoRespond(
+                "[APIキー確認エラー]",
+                "おや、殿。登録されたAPIキーが正しく認識できませんでした。右上の「🟢 AI接続中」ボタンから、キーのコピー漏れがないかもう一度ご確認いただけますか？",
+                "alert",
+                "analyze"
+              );
             } else {
               const localReply = generateLocalDetailedReply(text);
               hayatoRespond(localReply.tag, localReply.text, localReply.expr, localReply.motion);
