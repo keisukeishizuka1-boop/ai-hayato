@@ -8,13 +8,13 @@
   <title>AIハヤト - 自律型サイバーマスコット</title>
   <style>
     :root {
-      --bg-deep: #030914;
-      --bg-panel: rgba(8, 22, 42, 0.88);
-      --cyan-main: #00f0ff;
+      --bg-dark: #070d19;
+      --bg-panel: rgba(13, 25, 48, 0.85);
+      --cyan: #00f0ff;
       --cyan-glow: rgba(0, 240, 255, 0.45);
-      --blue-accent: #1d7dff;
-      --text-main: #e6f7ff;
-      --text-sub: #7fb8cc;
+      --blue-accent: #1a6dff;
+      --text-main: #e6f4ff;
+      --text-dim: #7ea6cc;
       --alert-red: #ff3366;
       --alert-glow: rgba(255, 51, 102, 0.5);
       --online-green: #00ffaa;
@@ -27,2014 +27,1293 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: var(--bg-deep);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
       user-select: none;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: var(--bg-dark);
       background-image:
-        linear-gradient(rgba(0, 240, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.06) 1px, transparent 1px);
-      background-size: 32px 32px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at 50% 42%, rgba(255, 30, 56, 0.12) 0%, rgba(0, 240, 255, 0.08) 38%, rgba(3, 9, 20, 0.95) 75%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .app-shell {
-      position: relative;
-      z-index: 1;
+        radial-gradient(circle at 50% 42%, rgba(0, 140, 255, 0.16) 0%, transparent 60%),
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text-main);
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      width: 100%;
-      max-width: 780px;
-      height: 100dvh;
-      margin: 0 auto;
-      padding-top: calc(10px + var(--safe-top));
-      padding-bottom: calc(10px + var(--safe-bottom));
-      padding-left: 12px;
-      padding-right: 12px;
-      gap: 6px;
+      padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
     }
 
-    .hud-header {
+    /* 1. ステータスバー */
+    .status-bar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      padding: 8px 10px;
+      align-items: center;
+      padding: 10px 14px;
       background: var(--bg-panel);
       border: 1px solid rgba(0, 240, 255, 0.35);
       border-radius: 14px;
       box-shadow: 0 0 18px rgba(0, 240, 255, 0.12);
-      backdrop-filter: blur(8px);
-      flex-shrink: 0;
+      backdrop-filter: blur(10px);
+      z-index: 10;
     }
 
-    .hud-brand {
+    .status-left {
       display: flex;
       align-items: center;
-      gap: 8px;
-      min-width: 0;
+      gap: 10px;
     }
 
     .status-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background-color: #ff1e38;
-      box-shadow: 0 0 10px #ff1e38;
+      background-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
       animation: pulseDot 2s infinite ease-in-out;
-      flex-shrink: 0;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .status-dot.is-online {
-      background-color: var(--online-green);
-      box-shadow: 0 0 12px var(--online-green);
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
     }
 
-    .hud-title-group {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
+    .status-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
     }
 
-    .hud-title {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      color: var(--cyan-main);
-      text-shadow: 0 0 8px var(--cyan-glow);
-      white-space: nowrap;
+    .status-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 2px;
     }
 
-    .hud-sub {
-      font-size: 10px;
-      color: var(--text-sub);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .hud-actions {
+    .header-controls {
       display: flex;
       align-items: center;
       gap: 6px;
-      flex-shrink: 0;
     }
 
-    .brain-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      min-height: 34px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1.5px solid #ffd166;
-      background: rgba(255, 209, 102, 0.14);
-      color: #ffd166;
-      font-size: 11px;
-      font-weight: 700;
+    .pill-btn {
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid rgba(0, 240, 255, 0.45);
+      color: var(--cyan);
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 20px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
 
-    .brain-btn.is-connected {
-      border-color: var(--online-green);
+    .pill-btn:active {
+      transform: scale(0.95);
+    }
+
+    .pill-btn.muted {
+      background: rgba(255, 51, 102, 0.15);
+      border-color: rgba(255, 51, 102, 0.5);
+      color: #ff809f;
+    }
+
+    .pill-btn.api-connected {
       background: rgba(0, 255, 170, 0.14);
+      border-color: rgba(0, 255, 170, 0.6);
       color: var(--online-green);
+      box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
     }
 
-    .brain-btn:active {
-      transform: scale(0.95);
-    }
-
-    .voice-toggle-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      min-height: 34px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1.5px solid var(--cyan-main);
-      background: rgba(0, 240, 255, 0.14);
-      color: var(--cyan-main);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .voice-toggle-btn.is-off {
-      border-color: rgba(127, 184, 204, 0.4);
-      background: rgba(15, 30, 50, 0.6);
-      color: var(--text-sub);
-    }
-
-    .voice-toggle-btn:active {
-      transform: scale(0.95);
-    }
-
-    .stage-area {
+    /* 2. 中央エリア */
+    .center-stage {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
+      gap: 14px;
       min-height: 0;
-      padding: 4px 0;
-      gap: 6px;
     }
 
     .speech-bubble {
       position: relative;
       width: 100%;
-      max-width: 580px;
-      background: rgba(6, 20, 38, 0.92);
-      border: 1.5px solid var(--cyan-main);
-      border-radius: 18px;
-      padding: 10px 14px 9px 14px;
-      box-shadow: 0 0 22px rgba(0, 240, 255, 0.2), inset 0 0 14px rgba(0, 240, 255, 0.08);
-      transition: transform 0.2s ease, border-color 0.2s ease;
+      max-width: 560px;
+      background: rgba(10, 22, 44, 0.92);
+      border: 1px solid rgba(0, 240, 255, 0.55);
+      border-radius: 16px;
+      padding: 14px 18px 16px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), inset 0 0 16px rgba(0, 240, 255, 0.08);
+      min-height: 92px;
+      max-height: 185px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .speech-bubble.alert-mode {
+      border-color: var(--alert-red);
+      box-shadow: 0 8px 28px rgba(255, 51, 102, 0.25), inset 0 0 18px rgba(255, 51, 102, 0.15);
+    }
+
+    .speech-bubble.online-mode {
+      border-color: rgba(0, 255, 170, 0.65);
+      box-shadow: 0 8px 28px rgba(0, 255, 170, 0.14), inset 0 0 16px rgba(0, 255, 170, 0.08);
     }
 
     .speech-bubble::after {
       content: "";
       position: absolute;
-      bottom: -9px;
+      bottom: -10px;
       left: 50%;
-      transform: translateX(-50%) rotate(45deg);
-      width: 15px;
-      height: 15px;
-      background: rgba(6, 20, 38, 0.96);
-      border-right: 1.5px solid var(--cyan-main);
-      border-bottom: 1.5px solid var(--cyan-main);
+      transform: translateX(-50%);
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: rgba(0, 240, 255, 0.55) transparent transparent;
     }
 
-    .speech-meta {
+    .speech-bubble.alert-mode::after {
+      border-color: var(--alert-red) transparent transparent;
+    }
+
+    .speech-bubble.online-mode::after {
+      border-color: rgba(0, 255, 170, 0.65) transparent transparent;
+    }
+
+    .bubble-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-
-    .reaction-tag {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--cyan-main);
-      letter-spacing: 0.04em;
-    }
-
-    .speech-controls {
-      display: inline-flex;
       align-items: center;
-      gap: 5px;
+      margin-bottom: 6px;
+    }
+
+    .bubble-tag {
+      font-size: 0.7rem;
+      color: var(--cyan);
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .speech-bubble.alert-mode .bubble-tag {
+      color: #ff668c;
+    }
+
+    .speech-bubble.online-mode .bubble-tag {
+      color: var(--online-green);
     }
 
     .replay-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 240, 255, 0.45);
       background: rgba(0, 240, 255, 0.1);
-      color: var(--cyan-main);
-      font-size: 11px;
-      font-weight: 600;
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--text-main);
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 12px;
       cursor: pointer;
-    }
-
-    .replay-btn:active {
-      transform: scale(0.94);
-    }
-
-    .stop-speak-btn {
-      display: none;
-      align-items: center;
-      gap: 3px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid var(--alert-red);
-      background: rgba(255, 51, 102, 0.2);
-      color: #ff85a2;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .stop-speak-btn.is-visible {
-      display: inline-flex;
     }
 
     .speech-text {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #f0fcff;
-      min-height: 40px;
-      max-height: 112px;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      color: #ffffff;
+      font-weight: 500;
       overflow-y: auto;
-      word-break: break-word;
       user-select: text;
     }
 
+    /* マスコット＋左右の操作オーブ配置エリア */
     .mascot-stage-row {
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 20px;
       width: 100%;
-      max-width: 540px;
-      gap: 10px;
-      padding: 2px 0;
+      max-width: 560px;
     }
 
-    .side-orb-btn {
+    /* 左右のサイバーオーブボタン（常時音声・送信） */
+    .side-orb {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(20, 46, 86, 0.95), rgba(8, 18, 36, 0.98));
+      border: 2px solid rgba(0, 240, 255, 0.45);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.2), inset 0 0 12px rgba(0, 240, 255, 0.12);
+      color: var(--cyan);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      width: 66px;
-      height: 66px;
-      border-radius: 50%;
-      border: 2px solid var(--cyan-main);
-      background: radial-gradient(circle at 30% 30%, rgba(0, 240, 255, 0.24), rgba(6, 20, 38, 0.92));
-      color: var(--cyan-main);
-      box-shadow: 0 0 16px rgba(0, 240, 255, 0.28), inset 0 0 10px rgba(0, 240, 255, 0.15);
+      gap: 4px;
       cursor: pointer;
+      transition: all 0.22s ease;
       flex-shrink: 0;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      touch-action: manipulation;
+      position: relative;
     }
 
-    .side-orb-btn:active {
-      transform: scale(0.91);
+    .side-orb:active {
+      transform: scale(0.92);
     }
 
-    .side-orb-icon {
-      font-size: 22px;
+    .side-orb .orb-icon {
+      font-size: 1.35rem;
       line-height: 1;
     }
 
-    .side-orb-label {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      line-height: 1.1;
+    .side-orb .orb-label {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
       text-align: center;
+      line-height: 1.15;
     }
 
-    .side-orb-btn.is-handsfree-standby {
-      border-color: #00ffaa;
-      background: radial-gradient(circle at 30% 30%, rgba(0, 255, 170, 0.3), rgba(5, 28, 32, 0.95));
-      color: #80ffd4;
-      box-shadow: 0 0 20px rgba(0, 255, 170, 0.45), inset 0 0 12px rgba(0, 255, 170, 0.2);
-      animation: standbyPulse 2.2s infinite;
+    .side-orb.continuous-active {
+      border-color: var(--online-green);
+      color: var(--online-green);
+      background: radial-gradient(circle at 35% 30%, rgba(0, 95, 68, 0.95), rgba(6, 26, 22, 0.98));
+      box-shadow: 0 0 24px rgba(0, 255, 170, 0.45), inset 0 0 14px rgba(0, 255, 170, 0.25);
+      animation: orbGreenPulse 2s infinite ease-in-out;
     }
 
-    .side-orb-btn.is-listening {
+    .side-orb.listening-now {
       border-color: var(--alert-red);
-      background: radial-gradient(circle at 30% 30%, rgba(255, 51, 102, 0.4), rgba(36, 8, 20, 0.95));
-      color: #ffffff;
-      box-shadow: 0 0 24px var(--alert-glow), inset 0 0 14px rgba(255, 51, 102, 0.3);
-      animation: micPulse 0.95s infinite;
+      color: #ff809f;
+      background: radial-gradient(circle at 35% 30%, rgba(110, 18, 42, 0.95), rgba(32, 6, 14, 0.98));
+      box-shadow: 0 0 26px rgba(255, 51, 102, 0.65), inset 0 0 16px rgba(255, 51, 102, 0.3);
+      animation: orbRedPulse 1s infinite ease-in-out;
     }
 
-    .side-orb-btn.send-orb {
-      border-color: #38a3ff;
-      background: linear-gradient(145deg, rgba(0, 210, 255, 0.32), rgba(29, 125, 255, 0.45));
-      color: #ffffff;
-      box-shadow: 0 0 18px rgba(29, 125, 255, 0.4);
+    @keyframes orbGreenPulse {
+      0%, 100% { box-shadow: 0 0 16px rgba(0, 255, 170, 0.35), inset 0 0 10px rgba(0, 255, 170, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(0, 255, 170, 0.75), inset 0 0 18px rgba(0, 255, 170, 0.35); }
     }
 
-    .side-orb-btn.send-orb.is-speaking-stop {
-      border-color: var(--alert-red);
-      background: linear-gradient(145deg, rgba(255, 51, 102, 0.35), rgba(140, 18, 52, 0.65));
-      color: #ffd6e0;
-      box-shadow: 0 0 18px var(--alert-glow);
+    @keyframes orbRedPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
     }
 
-    .mascot-container {
+    .side-orb.send-orb {
+      border-color: rgba(26, 109, 255, 0.75);
+      color: #82b4ff;
+      background: radial-gradient(circle at 35% 30%, rgba(22, 64, 145, 0.95), rgba(8, 20, 48, 0.98));
+      box-shadow: 0 0 18px rgba(26, 109, 255, 0.35), inset 0 0 12px rgba(0, 240, 255, 0.15);
+    }
+
+    /* キャラクターコンテナ */
+    .mascot-wrapper {
       position: relative;
+      width: 196px;
+      height: 196px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      padding: 2px;
-      touch-action: manipulation;
+      animation: floatMascot 3.6s ease-in-out infinite;
+      flex-shrink: 0;
     }
 
-    .mascot-holo-ring {
+    @keyframes floatMascot {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-7px); }
+    }
+
+    .holo-ring {
       position: absolute;
-      bottom: 12px;
-      width: 126px;
-      height: 22px;
+      width: 184px;
+      height: 184px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255, 30, 56, 0.55);
-      background: radial-gradient(ellipse at center, rgba(255, 30, 56, 0.25) 0%, transparent 72%);
-      box-shadow: 0 0 18px rgba(255, 30, 56, 0.4);
-      animation: ringPulse 3.2s ease-in-out infinite;
+      border: 2px dashed rgba(0, 240, 255, 0.4);
+      animation: spinRing 18s linear infinite;
       pointer-events: none;
     }
 
-    .mascot-svg-wrap {
-      width: 152px;
-      height: 168px;
-      animation: floatIdle 3.2s ease-in-out infinite;
-      filter: drop-shadow(0 0 14px rgba(255, 30, 56, 0.38));
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .holo-ring-inner {
+      position: absolute;
+      width: 162px;
+      height: 162px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 24px var(--cyan-glow), inset 0 0 24px var(--cyan-glow);
+      pointer-events: none;
     }
 
-    .mascot-svg-wrap.anim-bounce {
-      animation: excitedBounce 0.65s ease-in-out 2, floatIdle 3.2s ease-in-out 1.3s infinite;
+    .mascot-wrapper.speaking .holo-ring-inner {
+      border-color: var(--cyan);
+      box-shadow: 0 0 36px rgba(0, 240, 255, 0.8), inset 0 0 30px rgba(0, 240, 255, 0.45);
+      animation: pulseSpeak 0.6s infinite alternate;
     }
 
-    .mascot-svg-wrap.anim-analyze {
-      animation: analyzeWiggle 0.45s ease-in-out 3, floatIdle 3.2s ease-in-out 1.35s infinite;
+    .mascot-wrapper.alert-mode .holo-ring-inner {
+      border-color: var(--alert-red);
+      box-shadow: 0 0 36px var(--alert-glow), inset 0 0 30px var(--alert-glow);
     }
 
-    .mascot-tap-hint {
-      margin-top: 2px;
-      font-size: 10px;
-      color: var(--text-sub);
-      letter-spacing: 0.04em;
-      opacity: 0.85;
+    @keyframes spinRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
-    .eye-blink-group {
-      transform-origin: 100px 94px;
-      animation: blinkEyes 4.6s infinite;
+    @keyframes pulseSpeak {
+      from { transform: scale(0.98); }
+      to { transform: scale(1.04); }
     }
 
-    .mouth-talking {
-      transform-origin: 100px 121px;
-      animation: mouthTalk 0.24s infinite alternate ease-in-out;
+    .mascot-svg {
+      width: 158px;
+      height: 158px;
+      z-index: 2;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
     }
 
-    .control-dock {
+    .nameplate {
+      background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.18), transparent);
+      border-top: 1px solid rgba(0, 240, 255, 0.45);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.45);
+      padding: 4px 26px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #ffffff;
+      text-shadow: 0 0 10px var(--cyan);
+    }
+
+    .tap-hint {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: -8px;
+    }
+
+    /* 3. コントロールパネル */
+    .control-panel {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 9px;
       background: var(--bg-panel);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      border-radius: 18px;
-      padding: 9px 10px;
-      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(0, 240, 255, 0.28);
+      border-radius: 16px;
+      padding: 11px 12px;
       backdrop-filter: blur(10px);
-      flex-shrink: 0;
     }
 
     .mic-status-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      min-height: 20px;
-      padding: 2px 6px;
-      border-radius: 8px;
-      background: rgba(0, 240, 255, 0.06);
-      font-size: 11px;
-      color: var(--text-sub);
+      background: rgba(6, 14, 28, 0.78);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
     }
 
     .mic-status-bar.is-standby {
-      color: #80ffd4;
-      background: rgba(0, 255, 170, 0.1);
-      font-weight: 700;
+      border-color: rgba(0, 255, 170, 0.55);
+      color: var(--online-green);
+      background: rgba(0, 45, 32, 0.45);
     }
 
     .mic-status-bar.is-listening {
-      color: #ff85a2;
-      background: rgba(255, 51, 102, 0.14);
-      font-weight: 700;
+      border-color: var(--alert-red);
+      color: #ff99b2;
+      background: rgba(65, 10, 25, 0.55);
     }
 
     .mic-status-bar.is-fallback {
+      border-color: rgba(255, 180, 0, 0.6);
       color: #ffd166;
+      background: rgba(55, 38, 6, 0.55);
     }
 
-    .quick-chips {
+    .quick-actions {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 7px;
       overflow-x: auto;
       padding-bottom: 2px;
       scrollbar-width: none;
     }
 
-    .quick-chips::-webkit-scrollbar {
+    .quick-actions::-webkit-scrollbar {
       display: none;
     }
 
     .chip-btn {
-      flex-shrink: 0;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 240, 255, 0.32);
-      background: rgba(0, 240, 255, 0.08);
+      flex: 0 0 auto;
+      background: rgba(26, 109, 255, 0.16);
+      border: 1px solid rgba(0, 240, 255, 0.4);
       color: var(--text-main);
-      font-size: 11px;
+      font-size: 0.8rem;
       font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.15s ease;
+      transition: all 0.18s;
     }
 
     .chip-btn:active {
-      background: rgba(0, 240, 255, 0.25);
+      background: rgba(0, 240, 255, 0.3);
       transform: scale(0.96);
     }
 
     .input-row {
       display: flex;
+      gap: 8px;
       align-items: center;
-      gap: 6px;
     }
 
-    .text-input {
+    .chat-input {
       flex: 1;
-      min-width: 0;
-      height: 40px;
-      padding: 0 12px;
-      border-radius: 12px;
+      background: rgba(5, 12, 24, 0.9);
       border: 1px solid rgba(0, 240, 255, 0.4);
-      background: rgba(2, 10, 22, 0.9);
+      border-radius: 12px;
+      padding: 10px 13px;
       color: #ffffff;
-      font-size: 16px;
+      font-size: 0.92rem;
       outline: none;
       user-select: text;
     }
 
-    .text-input::placeholder {
-      color: rgba(127, 184, 204, 0.55);
-      font-size: 13px;
+    .chat-input::placeholder {
+      color: #5b7fa3;
     }
 
-    .text-input:focus {
-      border-color: var(--cyan-main);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+    .chat-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
     }
 
-    .clear-input-btn {
-      height: 40px;
-      padding: 0 10px;
+    .clear-btn {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 10px 11px;
       border-radius: 12px;
-      border: 1px solid rgba(127, 184, 204, 0.35);
-      background: rgba(12, 26, 46, 0.85);
-      color: var(--text-sub);
-      font-size: 12px;
-      font-weight: 700;
       cursor: pointer;
-      flex-shrink: 0;
+      white-space: nowrap;
     }
 
-    .clear-input-btn:active {
+    .clear-btn:active {
       transform: scale(0.95);
     }
 
-    .modal-backdrop {
+    /* APIキー設定モーダル */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      z-index: 50;
+      background: rgba(3, 8, 18, 0.84);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
-      background: rgba(2, 6, 15, 0.82);
-      backdrop-filter: blur(6px);
+      padding: 18px;
+      z-index: 100;
     }
 
-    .modal-backdrop.is-open {
+    .modal-overlay.open {
       display: flex;
     }
 
     .modal-card {
       width: 100%;
       max-width: 440px;
-      background: #07162b;
-      border: 1.5px solid var(--cyan-main);
-      border-radius: 20px;
-      padding: 20px 18px;
-      box-shadow: 0 0 30px rgba(0, 240, 255, 0.28);
+      background: #0b172e;
+      border: 1px solid var(--cyan);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 0 32px rgba(0, 240, 255, 0.25);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .modal-title {
-      font-size: 16px;
+      font-size: 1.05rem;
       font-weight: 800;
-      color: var(--cyan-main);
+      color: var(--cyan);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .modal-desc {
-      font-size: 13px;
+      font-size: 0.84rem;
       line-height: 1.55;
-      color: #d6eef8;
+      color: var(--text-main);
     }
 
-    .modal-desc a {
-      color: #ffd166;
-      text-decoration: underline;
-    }
-
-    .api-key-input {
+    .modal-input {
       width: 100%;
-      height: 44px;
-      padding: 0 12px;
-      border-radius: 12px;
-      border: 1.5px solid rgba(0, 240, 255, 0.5);
-      background: #020913;
+      background: #050c18;
+      border: 1px solid rgba(0, 240, 255, 0.5);
+      border-radius: 10px;
+      padding: 11px 12px;
       color: #ffffff;
-      font-size: 15px;
-      font-family: monospace;
+      font-size: 0.9rem;
       outline: none;
       user-select: text;
     }
 
-    .api-key-input:focus {
-      border-color: var(--online-green);
-    }
-
-    .modal-btn-row {
+    .modal-actions {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
       gap: 8px;
-      margin-top: 4px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
     .modal-btn {
-      height: 40px;
-      padding: 0 16px;
-      border-radius: 12px;
-      font-size: 13px;
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 0.84rem;
       font-weight: 700;
       cursor: pointer;
-      border: 1px solid transparent;
+      border: none;
     }
 
-    .modal-btn-cancel {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(127, 184, 204, 0.35);
-      color: var(--text-sub);
+    .modal-btn.save {
+      background: linear-gradient(135deg, #00c6ff, #1a6dff);
+      color: #ffffff;
     }
 
-    .modal-btn-clear {
-      background: rgba(255, 51, 102, 0.16);
-      border-color: var(--alert-red);
-      color: #ff85a2;
+    .modal-btn.remove {
+      background: rgba(255, 51, 102, 0.18);
+      border: 1px solid rgba(255, 51, 102, 0.5);
+      color: #ff809f;
       margin-right: auto;
     }
 
-    .modal-btn-save {
-      background: linear-gradient(135deg, #00d2ff, #1d7dff);
-      color: #ffffff;
-      box-shadow: 0 0 14px rgba(0, 210, 255, 0.4);
-    }
-
-    @media (max-width: 390px) {
-      .hud-title {
-        font-size: 12px;
-      }
-      .mascot-stage-row {
-        gap: 6px;
-      }
-      .side-orb-btn {
-        width: 60px;
-        height: 60px;
-      }
-      .mascot-svg-wrap {
-        width: 138px;
-        height: 152px;
-      }
-    }
-
-    @media (max-height: 680px) {
-      .mascot-svg-wrap {
-        width: 130px;
-        height: 144px;
-      }
-      .speech-bubble {
-        padding: 8px 12px 7px 12px;
-      }
-      .speech-text {
-        font-size: 13px;
-        min-height: 36px;
-        max-height: 78px;
-      }
-      .control-dock {
-        padding: 7px 9px;
-        gap: 5px;
-      }
-    }
-
-    @media (min-width: 700px) {
-      .app-shell {
-        padding-top: calc(18px + var(--safe-top));
-        padding-bottom: calc(18px + var(--safe-bottom));
-        padding-left: 24px;
-        padding-right: 24px;
-      }
-      .hud-title {
-        font-size: 17px;
-      }
-      .speech-bubble {
-        padding: 18px 22px;
-      }
-      .speech-text {
-        font-size: 17px;
-        min-height: 60px;
-        max-height: 155px;
-      }
-      .mascot-stage-row {
-        gap: 28px;
-      }
-      .side-orb-btn {
-        width: 84px;
-        height: 84px;
-      }
-      .side-orb-icon {
-        font-size: 28px;
-      }
-      .side-orb-label {
-        font-size: 12px;
-      }
-      .mascot-svg-wrap {
-        width: 220px;
-        height: 242px;
-      }
-      .mascot-holo-ring {
-        width: 175px;
-        height: 34px;
-      }
-      .chip-btn {
-        font-size: 14px;
-        padding: 8px 15px;
-      }
-    }
-
-    @keyframes floatIdle {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-9px); }
-    }
-
-    @keyframes ringPulse {
-      0%, 100% { transform: scale(1); opacity: 0.75; }
-      50% { transform: scale(0.86); opacity: 0.35; }
-    }
-
-    @keyframes excitedBounce {
-      0%, 100% { transform: translateY(0) scale(1); }
-      35% { transform: translateY(-16px) scale(1.06, 0.96); }
-      70% { transform: translateY(3px) scale(0.97, 1.03); }
-    }
-
-    @keyframes analyzeWiggle {
-      0%, 100% { transform: rotate(0deg) scale(1.03); }
-      25% { transform: rotate(-6deg) scale(1.04); }
-      75% { transform: rotate(6deg) scale(1.04); }
-    }
-
-    @keyframes blinkEyes {
-      0%, 92%, 100% { transform: scaleY(1); }
-      95% { transform: scaleY(0.08); }
-    }
-
-    @keyframes mouthTalk {
-      0% { transform: scaleY(0.4); }
-      100% { transform: scaleY(1.2); }
-    }
-
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.8); }
-    }
-
-    @keyframes standbyPulse {
-      0%, 100% { box-shadow: 0 0 14px rgba(0, 255, 170, 0.35), inset 0 0 10px rgba(0, 255, 170, 0.15); }
-      50% { box-shadow: 0 0 24px rgba(0, 255, 170, 0.65), inset 0 0 16px rgba(0, 255, 170, 0.3); }
-    }
-
-    @keyframes micPulse {
-      0%, 100% { box-shadow: 0 0 14px var(--alert-glow); transform: scale(1); }
-      50% { box-shadow: 0 0 28px rgba(255, 51, 102, 0.9); transform: scale(1.05); }
+    .modal-btn.cancel {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-dim);
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="hud-header">
-      <div class="hud-brand">
-        <span class="status-dot" id="statusDot" aria-hidden="true"></span>
-        <div class="hud-title-group">
-          <div class="hud-title">SYSTEM // AI HAYATO</div>
-          <div class="hud-sub" id="hudSubStatus">自律思考モジュール・スタンバイ</div>
-        </div>
+
+  <!-- 上部ステータスバー -->
+  <header class="status-bar">
+    <div class="status-left">
+      <div class="status-dot" id="statusDot"></div>
+      <div>
+        <div class="status-title">SYSTEM // AI HAYATO</div>
+        <div class="status-sub" id="statusSub">オンライン待機中・監視モード</div>
       </div>
-      <div class="hud-actions">
-        <button type="button" class="brain-btn" id="openBrainModalBtn" aria-label="AI頭脳の接続設定">
-          <span id="brainBtnIcon">🧠</span>
-          <span id="brainBtnLabel">頭脳未接続</span>
-        </button>
-        <button type="button" class="voice-toggle-btn is-on" id="voiceToggleBtn" aria-label="音声出力の切り替え">
-          <span id="voiceToggleIcon">🔊</span>
-          <span id="voiceToggleLabel">音声 ON</span>
-        </button>
+    </div>
+    <div class="header-controls">
+      <button class="pill-btn" id="apiKeyBtn" aria-label="AI頭脳接続設定">🧠 AI頭脳接続</button>
+      <button class="pill-btn" id="voiceToggleBtn" aria-label="音声切り替え">🔊 音声 ON</button>
+    </div>
+  </header>
+
+  <!-- 中央マスコットエリア -->
+  <main class="center-stage">
+    <div class="speech-bubble" id="speechBubble">
+      <div class="bubble-header">
+        <span class="bubble-tag" id="bubbleTag">[SYSTEM READY]</span>
+        <button class="replay-btn" id="replayBtn">🔊 もう一度聞く</button>
       </div>
-    </header>
-
-    <main class="stage-area">
-      <section class="speech-bubble" aria-live="polite">
-        <div class="speech-meta">
-          <span class="reaction-tag" id="reactionTag">[システム起動完了]</span>
-          <div class="speech-controls">
-            <button type="button" class="stop-speak-btn" id="stopSpeakBtn" aria-label="読み上げを停止">⏹ 停止</button>
-            <button type="button" class="replay-btn" id="replayBtn" aria-label="セリフをもう一度聞く">🔊 もう一度聞く</button>
-          </div>
-        </div>
-        <div class="speech-text" id="speechText">
-          システム起動完了。お呼びですか、殿？ 左の「常時音声」を1回押していただければ、あとはボタンを押さずに声だけでご質問にお答えしますよ！
-        </div>
-      </section>
-
-      <div class="mascot-stage-row">
-        <button
-          type="button"
-          class="side-orb-btn"
-          id="leftVoiceOrbBtn"
-          aria-label="常時音声待機のオンオフ"
-        >
-          <span class="side-orb-icon" id="leftVoiceIcon">🎙️</span>
-          <span class="side-orb-label" id="leftVoiceLabel">常時音声<br />OFF</span>
-        </button>
-
-        <div class="mascot-container" id="mascotBtn" role="button" tabindex="0" aria-label="AIハヤトに話しかける">
-          <div class="mascot-holo-ring"></div>
-          <div class="mascot-svg-wrap" id="mascotWrap">
-            <svg viewBox="0 0 200 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <clipPath id="badgeClip">
-                  <circle cx="100" cy="116" r="84" />
-                </clipPath>
-                <radialGradient id="redFrameGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="70%" stop-color="#05080f" />
-                  <stop offset="94%" stop-color="#3a0610" />
-                  <stop offset="100%" stop-color="#ff1e38" />
-                </radialGradient>
-              </defs>
-
-              <circle cx="100" cy="116" r="85" fill="url(#redFrameGlow)" stroke="#ff1e38" stroke-width="5" />
-              <circle cx="100" cy="116" r="89" fill="none" stroke="rgba(255, 30, 56, 0.45)" stroke-width="2" />
-
-              <g clip-path="url(#badgeClip)">
-                <path
-                  d="M 42 188 C 36 164, 52 144, 74 142 L 126 142 C 148 144, 164 164, 158 188 Z"
-                  fill="#7c7c80"
-                  stroke="#1c1c1e"
-                  stroke-width="3.5"
-                  stroke-linejoin="round"
-                />
-                <path d="M 58 164 C 60 174, 62 182, 62 188" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <path d="M 142 164 C 140 174, 138 182, 138 188" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <polygon points="82,142 118,142 100,178" fill="#f7f9fc" stroke="#1c1c1e" stroke-width="2.5" stroke-linejoin="round" />
-                <polygon points="95,144 105,144 103,152 97,152" fill="#2d769e" stroke="#1c1c1e" stroke-width="2.2" stroke-linejoin="round" />
-                <polygon points="97,152 103,152 106,174 100,182 94,174" fill="#3689b5" stroke="#1c1c1e" stroke-width="2.2" stroke-linejoin="round" />
-                <path d="M 80 142 L 74 156 L 84 160 L 82 167 L 99 182" fill="#8d8d92" stroke="#1c1c1e" stroke-width="2.6" stroke-linejoin="round" />
-                <path d="M 120 142 L 126 156 L 116 160 L 118 167 L 101 182" fill="#8d8d92" stroke="#1c1c1e" stroke-width="2.6" stroke-linejoin="round" />
-                <ellipse cx="64" cy="182" rx="10" ry="8" fill="#8c7a72" stroke="#1c1c1e" stroke-width="2.8" />
-                <ellipse cx="136" cy="182" rx="10" ry="8" fill="#8c7a72" stroke="#1c1c1e" stroke-width="2.8" />
-              </g>
-
-              <path d="M 43 84 C 31 80, 29 104, 45 106" fill="#fae6d6" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-              <path d="M 41 90 C 36 90, 36 99, 42 99" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round" />
-              <path d="M 157 84 C 169 80, 171 104, 155 106" fill="#fae6d6" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-              <path d="M 159 90 C 164 90, 164 99, 158 99" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round" />
-
-              <path
-                d="M 44 68 C 44 36, 156 36, 156 68 L 156 104 C 156 132, 130 144, 100 144 C 70 144, 44 132, 44 104 Z"
-                fill="#fae6d6"
-                stroke="#1c1c1e"
-                stroke-width="3.5"
-              />
-              <ellipse cx="100" cy="106" rx="10" ry="6" fill="#f0cbb2" opacity="0.75" />
-              <ellipse cx="100" cy="133" rx="14" ry="5" fill="#f0cbb2" opacity="0.65" />
-
-              <path
-                d="M 43 86
-                   C 37 70, 38 46, 54 34
-                   L 49 23 L 68 25 L 65 14 L 89 19 L 94 11 L 114 20 L 128 16 L 130 27 L 151 28 L 146 39
-                   C 162 49, 163 72, 157 86
-                   C 154 72, 148 58, 134 50
-                   C 120 44, 106 48, 96 58
-                   L 91 51 L 78 65 L 75 56 L 61 73 L 58 63 L 46 80 Z"
-                fill="#4a4643"
-                stroke="#1c1c1e"
-                stroke-width="3.5"
-                stroke-linejoin="round"
-              />
-              <path d="M 60 36 Q 66 44 62 50" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
-              <path d="M 86 28 Q 92 36 88 43" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
-              <path d="M 118 30 Q 124 37 120 44" fill="none" stroke="#6c6763" stroke-width="2.5" stroke-linecap="round" />
-
-              <circle cx="100" cy="108" r="1.8" fill="#1c1c1e" />
-
-              <g id="face-normal" class="eye-blink-group">
-                <path d="M 58 80 L 89 90" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M 142 80 L 111 90" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M 65 92 L 87 95 C 86 102, 67 102, 65 92 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
-                <circle cx="76" cy="96" r="2.6" fill="#1c1c1e" />
-                <path d="M 135 92 L 113 95 C 114 102, 133 102, 135 92 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
-                <circle cx="124" cy="96" r="2.6" fill="#1c1c1e" />
-              </g>
-
-              <g id="face-happy" style="display: none;">
-                <path d="M 59 79 Q 74 73 88 83" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <path d="M 141 79 Q 126 73 112 83" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <path d="M 65 96 Q 76 85 87 96" fill="none" stroke="#1c1c1e" stroke-width="3.4" stroke-linecap="round" />
-                <path d="M 113 96 Q 124 85 135 96" fill="none" stroke="#1c1c1e" stroke-width="3.4" stroke-linecap="round" />
-                <ellipse cx="62" cy="105" rx="6" ry="3.2" fill="#ff8599" opacity="0.55" />
-                <ellipse cx="138" cy="105" rx="6" ry="3.2" fill="#ff8599" opacity="0.55" />
-              </g>
-
-              <g id="face-analyze" style="display: none;">
-                <path d="M 58 76 L 88 86" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M 142 83 L 112 88" fill="none" stroke="#1c1c1e" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M 65 91 L 87 94 C 86 101, 67 101, 65 91 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
-                <circle cx="80" cy="95" r="2.6" fill="#00a8cc" />
-                <path d="M 135 93 L 113 95 C 114 101, 133 101, 135 93 Z" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.4" stroke-linejoin="round" />
-                <circle cx="127" cy="96" r="2.6" fill="#00a8cc" />
-              </g>
-
-              <g id="face-alert" style="display: none;">
-                <path d="M 58 75 Q 73 69 87 78" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <path d="M 142 75 Q 127 69 113 78" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <circle cx="76" cy="94" r="9.5" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.6" />
-                <circle cx="76" cy="94" r="3" fill="#ff1e38" />
-                <circle cx="124" cy="94" r="9.5" fill="#ffffff" stroke="#1c1c1e" stroke-width="2.6" />
-                <circle cx="124" cy="94" r="3" fill="#ff1e38" />
-              </g>
-
-              <g id="mouth-idle">
-                <path d="M 78 119 C 84 124, 116 124, 122 119" fill="none" stroke="#1c1c1e" stroke-width="3" stroke-linecap="round" />
-                <path d="M 76 117 L 80 121" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" />
-                <path d="M 124 117 L 120 121" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" />
-              </g>
-
-              <ellipse id="mouth-talking" class="mouth-talking" cx="100" cy="121" rx="10" ry="6.5" fill="#d95b66" stroke="#1c1c1e" stroke-width="2.5" style="display: none;" />
-
-              <text
-                x="100"
-                y="204"
-                text-anchor="middle"
-                font-size="22"
-                font-weight="900"
-                letter-spacing="1.5"
-                fill="#ffffff"
-                stroke="#05080f"
-                stroke-width="4"
-                paint-order="stroke"
-              >
-                AI ハヤト
-              </text>
-            </svg>
-          </div>
-          <div class="mascot-tap-hint">▲ タップで対話 / 左右で音声・送信</div>
-        </div>
-
-        <button
-          type="button"
-          class="side-orb-btn send-orb"
-          id="rightSendOrbBtn"
-          aria-label="メッセージを送信"
-        >
-          <span class="side-orb-icon" id="rightSendIcon">🚀</span>
-          <span class="side-orb-label" id="rightSendLabel">送信</span>
-        </button>
+      <div class="speech-text" id="speechText">
+        おはようございます、殿！AIハヤト、起動完了しました。左右の丸いボタンで「常時音声」と「送信」が使えますよ！
       </div>
-    </main>
+    </div>
 
-    <footer class="control-dock">
-      <div class="mic-status-bar" id="micStatusBar">
-        <span id="micStatusText">⏸️ 待機オフ（左の「🎙️ 常時音声」を1回押すと声だけで連続対話します）</span>
+    <!-- 左右のオーブボタン＋中央マスコット -->
+    <div class="mascot-stage-row">
+      <!-- 左：常時音声ボタン -->
+      <button class="side-orb" id="continuousVoiceBtn" aria-label="常時音声切り替え">
+        <span class="orb-icon" id="continuousIcon">🎙️</span>
+        <span class="orb-label" id="continuousLabel">常時音声<br>OFF</span>
+      </button>
+
+      <!-- 中央：AIハヤト本体 -->
+      <div class="mascot-wrapper" id="mascotWrapper" role="button" tabindex="0" aria-label="AIハヤトに話しかける">
+        <div class="holo-ring"></div>
+        <div class="holo-ring-inner"></div>
+
+        <svg class="mascot-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#2b3d54" />
+              <stop offset="100%" stop-color="#141e2b" />
+            </linearGradient>
+            <linearGradient id="hairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#3a3330" />
+              <stop offset="100%" stop-color="#1c1817" />
+            </linearGradient>
+          </defs>
+
+          <path d="M 48 182 C 48 144, 68 134, 100 134 C 132 134, 152 144, 152 182 Z" fill="url(#suitGrad)" stroke="#00f0ff" stroke-width="1.5" stroke-opacity="0.5"/>
+          <polygon points="84,135 116,135 100,174" fill="#eef6ff" />
+          <polygon points="82,135 94,148 88,156 76,142" fill="#ffffff" stroke="#cbd8e6" stroke-width="1"/>
+          <polygon points="118,135 106,148 112,156 124,142" fill="#ffffff" stroke="#cbd8e6" stroke-width="1"/>
+          <polygon points="96,142 104,142 106,166 100,173 94,166" fill="#00b8d4" />
+          <polygon points="95,137 105,137 103,143 97,143" fill="#008ba3" />
+          <path d="M 80 135 L 70 162 L 86 166 L 82 175 L 98 182" fill="none" stroke="#101824" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 120 135 L 130 162 L 114 166 L 118 175 L 102 182" fill="none" stroke="#101824" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <rect x="90" y="120" width="20" height="18" rx="6" fill="#f5cbb0" />
+          <circle cx="53" cy="92" r="9" fill="#f5cbb0" stroke="#231f20" stroke-width="2.5"/>
+          <circle cx="147" cy="92" r="9" fill="#f5cbb0" stroke="#231f20" stroke-width="2.5"/>
+
+          <path d="M 55 76 C 55 44, 145 44, 145 76 L 143 102 C 141 124, 122 134, 100 134 C 78 134, 59 124, 57 102 Z" fill="#ffe0c8" stroke="#231f20" stroke-width="3"/>
+
+          <path d="M 52 82 C 48 56, 62 34, 86 30 C 90 25, 104 24, 112 30 C 134 31, 152 50, 148 82 C 144 68, 138 60, 132 56 C 128 64, 122 68, 116 62 C 110 70, 100 72, 92 64 C 84 72, 74 70, 68 60 C 62 66, 56 72, 52 82 Z" fill="url(#hairGrad)" stroke="#1a1615" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M 85 42 Q 92 48 98 40" fill="none" stroke="#5a504c" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 106 41 Q 113 48 119 41" fill="none" stroke="#5a504c" stroke-width="2" stroke-linecap="round"/>
+
+          <g id="expr-normal">
+            <path d="M 68 74 Q 78 68 88 73" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 112 73 Q 122 68 132 74" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 70 88 Q 79 80 88 88" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M 112 88 Q 121 80 130 88" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M 86 106 Q 100 116 114 106" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+          </g>
+
+          <g id="expr-speak" style="display: none;">
+            <path d="M 68 72 Q 78 66 88 71" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 112 71 Q 122 66 132 72" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="79" cy="87" rx="5.5" ry="6.5" fill="#231f20"/>
+            <circle cx="77" cy="85" r="2" fill="#ffffff"/>
+            <ellipse cx="121" cy="87" rx="5.5" ry="6.5" fill="#231f20"/>
+            <circle cx="119" cy="85" r="2" fill="#ffffff"/>
+            <path d="M 87 104 Q 100 104 113 104 Q 111 120 100 120 Q 89 120 87 104 Z" fill="#d9534f" stroke="#231f20" stroke-width="2.5"/>
+            <path d="M 92 115 Q 100 111 108 115" fill="none" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
+          </g>
+
+          <g id="expr-analyze" style="display: none;">
+            <path d="M 67 74 L 89 76" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 111 76 L 133 74" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <rect x="65" y="81" width="28" height="13" rx="3" fill="rgba(0, 240, 255, 0.22)" stroke="#00f0ff" stroke-width="2"/>
+            <rect x="107" y="81" width="28" height="13" rx="3" fill="rgba(0, 240, 255, 0.22)" stroke="#00f0ff" stroke-width="2"/>
+            <line x1="93" y1="87" x2="107" y2="87" stroke="#00f0ff" stroke-width="2"/>
+            <circle cx="79" cy="87.5" r="3.5" fill="#231f20"/>
+            <circle cx="121" cy="87.5" r="3.5" fill="#231f20"/>
+            <path d="M 90 109 Q 102 112 112 106" fill="none" stroke="#231f20" stroke-width="2.8" stroke-linecap="round"/>
+          </g>
+
+          <g id="expr-alert" style="display: none;">
+            <path d="M 67 70 L 89 78" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M 133 70 L 111 78" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
+            <circle cx="79" cy="88" r="6" fill="#231f20"/>
+            <circle cx="77" cy="86" r="2" fill="#ffffff"/>
+            <circle cx="121" cy="88" r="6" fill="#231f20"/>
+            <circle cx="119" cy="86" r="2" fill="#ffffff"/>
+            <path d="M 88 113 Q 100 105 112 113" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 137 64 Q 141 72 137 76 Q 133 72 137 64 Z" fill="#4fc3f7" stroke="#0288d1" stroke-width="1.2"/>
+          </g>
+
+          <ellipse cx="67" cy="97" rx="6" ry="3.5" fill="#ff9e9e" opacity="0.55"/>
+          <ellipse cx="133" cy="97" rx="6" ry="3.5" fill="#ff9e9e" opacity="0.55"/>
+        </svg>
       </div>
 
-      <div class="quick-chips" aria-label="クイック指令">
-        <button type="button" class="chip-btn" data-cmd="今はいつ？日時を教えて">🕒 今の日時</button>
-        <button type="button" class="chip-btn" data-cmd="今日の業務の進め方を提案して">📋 業務のコツ</button>
-        <button type="button" class="chip-btn" data-cmd="セキュリティ対策で大切なことは？">🛡️ セキュリティ</button>
-        <button type="button" class="chip-btn" data-cmd="元気が出る一言をください">⚡ 励まして</button>
-        <button type="button" class="chip-btn" data-cmd="休憩の取り方をアドバイスして">🍵 休憩アドバイス</button>
-      </div>
+      <!-- 右：送信ボタン -->
+      <button class="side-orb send-orb" id="sendBtn" aria-label="送信">
+        <span class="orb-icon">🚀</span>
+        <span class="orb-label">送信</span>
+      </button>
+    </div>
 
-      <form class="input-row" id="chatForm" autocomplete="off">
-        <input
-          type="text"
-          class="text-input"
-          id="userInput"
-          placeholder="声で話すか、ここに直接入力…"
-          enterkeyhint="send"
-        />
-        <button type="button" class="clear-input-btn" id="clearInputBtn" aria-label="入力をクリア">クリア</button>
-      </form>
-    </footer>
-  </div>
+    <div class="nameplate">AI ハヤト</div>
+    <div class="tap-hint">▲ タップで対話 / 左右で音声・送信</div>
+  </main>
 
-  <div class="modal-backdrop" id="brainModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="brainModalTitle">
+  <!-- 下部コントロールパネル -->
+  <section class="control-panel">
+    <div class="mic-status-bar" id="micStatusBar">
+      <span id="micStatusText">🎙️ 左の「常時音声」を押すと声だけで対話できます</span>
+    </div>
+
+    <div class="quick-actions">
+      <button class="chip-btn" data-prompt="今の日時と挨拶を教えてください">🕒 今の日時</button>
+      <button class="chip-btn" data-prompt="今日の仕事を効率よく進めるコツを教えてください">📊 業務のコツ</button>
+      <button class="chip-btn" data-prompt="最新のサイバーセキュリティの注意点を教えてください">🛡️ セキュリティ</button>
+      <button class="chip-btn" data-prompt="やる気が出る一言をください！">⚡ 励まして</button>
+      <button class="chip-btn" data-prompt="少し疲れたので休憩のアドバイスをください">☕ 休憩アドバイス</button>
+    </div>
+
+    <div class="input-row">
+      <input type="text" class="chat-input" id="chatInput" placeholder="声で話すか、ここに直接入力..." />
+      <button class="clear-btn" id="clearInputBtn" title="入力欄を消去">クリア</button>
+    </div>
+  </section>
+
+  <!-- APIキー設定モーダル -->
+  <div class="modal-overlay" id="apiModal">
     <div class="modal-card">
-      <div class="modal-title" id="brainModalTitle">🧠 インターネットAI頭脳（Gemini API）の接続</div>
+      <div class="modal-title">🧠 AIハヤト オンライン頭脳（Gemini API）</div>
       <div class="modal-desc">
-        Google AI Studio（<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a>）で無料発行した
-        <strong>AIza...</strong> から始まるAPIキーを貼り付けて「接続する」を押してください。<br />
-        ※キーはお使いのiPad/iPhoneの中だけに安全に保存され、外部に公開されません。
+        Google AI Studio で取得した APIキー（<b>AIza...</b> または <b>AQ.Ab8...</b>）を貼り付けて保存すると、インターネット上の最新AIと直接つながります。<br>
+        <span style="font-size:0.76rem; color:#7ea6cc;">※キーはこの端末のブラウザ内にのみ安全に保存されます。</span>
       </div>
-      <input
-        type="password"
-        class="api-key-input"
-        id="apiKeyInput"
-        placeholder="AIzaSy... をここに貼り付け"
-        autocomplete="off"
-      />
-      <div class="modal-btn-row">
-        <button type="button" class="modal-btn modal-btn-clear" id="clearApiKeyBtn">解除</button>
-        <button type="button" class="modal-btn modal-btn-cancel" id="closeBrainModalBtn">閉じる</button>
-        <button type="button" class="modal-btn modal-btn-save" id="saveApiKeyBtn">接続する</button>
+      <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIzaSy... または AQ.Ab8... を貼り付け" />
+      <div class="modal-actions">
+        <button class="modal-btn remove" id="removeApiKeyBtn">解除</button>
+        <button class="modal-btn cancel" id="closeModalBtn">閉じる</button>
+        <button class="modal-btn save" id="saveApiKeyBtn">保存して接続</button>
       </div>
     </div>
   </div>
 
   <script>
-    (function () {
-      "use strict";
+    const mascotWrapper = document.getElementById("mascotWrapper");
+    const speechBubble = document.getElementById("speechBubble");
+    const bubbleTag = document.getElementById("bubbleTag");
+    const speechText = document.getElementById("speechText");
+    const statusSub = document.getElementById("statusSub");
+    const voiceToggleBtn = document.getElementById("voiceToggleBtn");
+    const replayBtn = document.getElementById("replayBtn");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const clearInputBtn = document.getElementById("clearInputBtn");
+    const quickChips = document.querySelectorAll(".chip-btn");
 
-      function initHayatoApp() {
-        const STORAGE_KEY_API = "hayato_gemini_api_key_v1";
+    const continuousVoiceBtn = document.getElementById("continuousVoiceBtn");
+    const continuousIcon = document.getElementById("continuousIcon");
+    const continuousLabel = document.getElementById("continuousLabel");
+    const micStatusBar = document.getElementById("micStatusBar");
+    const micStatusText = document.getElementById("micStatusText");
 
-        const statusDot = document.getElementById("statusDot");
-        const openBrainModalBtn = document.getElementById("openBrainModalBtn");
-        const brainBtnIcon = document.getElementById("brainBtnIcon");
-        const brainBtnLabel = document.getElementById("brainBtnLabel");
+    const apiKeyBtn = document.getElementById("apiKeyBtn");
+    const apiModal = document.getElementById("apiModal");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+    const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
+    const removeApiKeyBtn = document.getElementById("removeApiKeyBtn");
+    const closeModalBtn = document.getElementById("closeModalBtn");
 
-        const brainModalBackdrop = document.getElementById("brainModalBackdrop");
-        const apiKeyInput = document.getElementById("apiKeyInput");
-        const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
-        const closeBrainModalBtn = document.getElementById("closeBrainModalBtn");
-        const clearApiKeyBtn = document.getElementById("clearApiKeyBtn");
+    const expressions = {
+      normal: document.getElementById("expr-normal"),
+      speak: document.getElementById("expr-speak"),
+      analyze: document.getElementById("expr-analyze"),
+      alert: document.getElementById("expr-alert")
+    };
 
-        const voiceToggleBtn = document.getElementById("voiceToggleBtn");
-        const voiceToggleIcon = document.getElementById("voiceToggleIcon");
-        const voiceToggleLabel = document.getElementById("voiceToggleLabel");
-        const hudSubStatus = document.getElementById("hudSubStatus");
+    let voiceEnabled = true;
+    let lastSpokenText = speechText.textContent.trim();
+    let typingTimer = null;
+    let geminiApiKey = (localStorage.getItem("hayato_gemini_api_key") || "").trim();
 
-        const reactionTag = document.getElementById("reactionTag");
-        const speechText = document.getElementById("speechText");
-        const replayBtn = document.getElementById("replayBtn");
-        const stopSpeakBtn = document.getElementById("stopSpeakBtn");
+    let isContinuousMode = false;
+    let isRecognizing = false;
+    let isSpeaking = false;
+    let restartTimer = null;
+    let recognition = null;
+    let interimBuffer = "";
+    let silenceCommitTimer = null;
 
-        const leftVoiceOrbBtn = document.getElementById("leftVoiceOrbBtn");
-        const leftVoiceIcon = document.getElementById("leftVoiceIcon");
-        const leftVoiceLabel = document.getElementById("leftVoiceLabel");
-        const rightSendOrbBtn = document.getElementById("rightSendOrbBtn");
-        const rightSendIcon = document.getElementById("rightSendIcon");
-        const rightSendLabel = document.getElementById("rightSendLabel");
+    function updateApiButtonState() {
+      if (geminiApiKey) {
+        apiKeyBtn.textContent = "🟢 AI接続中";
+        apiKeyBtn.classList.add("api-connected");
+      } else {
+        apiKeyBtn.textContent = "🧠 AI頭脳接続";
+        apiKeyBtn.classList.remove("api-connected");
+      }
+    }
+    updateApiButtonState();
 
-        const mascotBtn = document.getElementById("mascotBtn");
-        const mascotWrap = document.getElementById("mascotWrap");
-        const faceNormal = document.getElementById("face-normal");
-        const faceHappy = document.getElementById("face-happy");
-        const faceAnalyze = document.getElementById("face-analyze");
-        const faceAlert = document.getElementById("face-alert");
-        const mouthIdle = document.getElementById("mouth-idle");
-        const mouthTalking = document.getElementById("mouth-talking");
+    apiKeyBtn.addEventListener("click", () => {
+      apiKeyInput.value = geminiApiKey;
+      apiModal.classList.add("open");
+    });
 
-        const micStatusBar = document.getElementById("micStatusBar");
-        const micStatusText = document.getElementById("micStatusText");
-        const chatForm = document.getElementById("chatForm");
-        const userInput = document.getElementById("userInput");
-        const clearInputBtn = document.getElementById("clearInputBtn");
-        const quickChips = document.querySelectorAll(".chip-btn");
+    closeModalBtn.addEventListener("click", () => {
+      apiModal.classList.remove("open");
+    });
 
-        if (!voiceToggleBtn || !leftVoiceOrbBtn || !rightSendOrbBtn || !speechText) {
+    saveApiKeyBtn.addEventListener("click", () => {
+      const val = apiKeyInput.value.trim();
+      if (!val) {
+        alert("APIキーを入力してください。");
+        return;
+      }
+      geminiApiKey = val;
+      localStorage.setItem("hayato_gemini_api_key", geminiApiKey);
+      updateApiButtonState();
+      apiModal.classList.remove("open");
+      respond("オンラインAI頭脳とのリンクを確立しました！もう何でも自由に話しかけてください、殿！", "[ONLINE AI LINKED]", "normal", false, true);
+    });
+
+    removeApiKeyBtn.addEventListener("click", () => {
+      geminiApiKey = "";
+      localStorage.removeItem("hayato_gemini_api_key");
+      apiKeyInput.value = "";
+      updateApiButtonState();
+      apiModal.classList.remove("open");
+      respond("オンライン接続を解除し、自律ローカルモードに戻りました。", "[LOCAL MODE]", "normal", false, false);
+    });
+
+    function setExpression(name) {
+      Object.keys(expressions).forEach((key) => {
+        expressions[key].style.display = (key === name) ? "block" : "none";
+      });
+    }
+
+    function updateLeftOrbVisual(state) {
+      continuousVoiceBtn.classList.remove("continuous-active", "listening-now");
+      if (state === "listening") {
+        continuousVoiceBtn.classList.add("listening-now");
+        continuousIcon.textContent = "🔴";
+        continuousLabel.innerHTML = "聞き取り中<br>ON";
+      } else if (state === "standby") {
+        continuousVoiceBtn.classList.add("continuous-active");
+        continuousIcon.textContent = "🎙️";
+        continuousLabel.innerHTML = "常時音声<br>ON";
+      } else {
+        continuousIcon.textContent = "🎙️";
+        continuousLabel.innerHTML = "常時音声<br>OFF";
+      }
+    }
+
+    function speakText(text) {
+      lastSpokenText = text;
+      if (!voiceEnabled || !("speechSynthesis" in window)) {
+        isSpeaking = false;
+        if (isContinuousMode) scheduleRestartRecognition(300);
+        return;
+      }
+
+      if (recognition && isRecognizing) {
+        try { recognition.abort(); } catch (e) {}
+        isRecognizing = false;
+      }
+
+      window.speechSynthesis.cancel();
+      isSpeaking = true;
+
+      const cleanText = text.replace(/[\[\]【】「」『』（）\(\)\*#・💡🛡️📊☕⚡🕒🌐⚠️]/g, " ");
+      const utter = new SpeechSynthesisUtterance(cleanText);
+      utter.lang = "ja-JP";
+      utter.rate = 1.06;
+      utter.pitch = 1.05;
+
+      const voices = window.speechSynthesis.getVoices();
+      const jpVoice = voices.find(v => v.lang.includes("ja") && (v.name.includes("Otoya") || v.name.includes("Hattori") || v.name.includes("Keita") || v.name.includes("Male")))
+                   || voices.find(v => v.lang.includes("ja"));
+      if (jpVoice) utter.voice = jpVoice;
+
+      utter.onstart = () => {
+        isSpeaking = true;
+        mascotWrapper.classList.add("speaking");
+        setExpression("speak");
+        if (isContinuousMode && micStatusBar && micStatusText) {
+          micStatusBar.classList.remove("is-standby", "is-listening");
+          micStatusText.textContent = "🔊 ハヤトが発話中...（話し終わると自動でマイクに戻ります）";
+        }
+      };
+
+      utter.onend = () => {
+        isSpeaking = false;
+        mascotWrapper.classList.remove("speaking");
+        setExpression(speechBubble.classList.contains("alert-mode") ? "alert" : "normal");
+        if (isContinuousMode) {
+          scheduleRestartRecognition(350);
+        }
+      };
+
+      utter.onerror = () => {
+        isSpeaking = false;
+        mascotWrapper.classList.remove("speaking");
+        setExpression("normal");
+        if (isContinuousMode) {
+          scheduleRestartRecognition(450);
+        }
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    function displaySpeech(text, tag = "[AI HAYATO]", expr = "normal", isAlert = false, isOnline = false) {
+      if (typingTimer) clearInterval(typingTimer);
+
+      bubbleTag.textContent = tag;
+      speechBubble.classList.toggle("alert-mode", isAlert);
+      speechBubble.classList.toggle("online-mode", isOnline && !isAlert);
+      mascotWrapper.classList.toggle("alert-mode", isAlert);
+      setExpression(expr);
+
+      speechText.textContent = "";
+      let idx = 0;
+      typingTimer = setInterval(() => {
+        speechText.textContent += text.charAt(idx);
+        speechText.scrollTop = speechText.scrollHeight;
+        idx++;
+        if (idx >= text.length) {
+          clearInterval(typingTimer);
+          typingTimer = null;
+        }
+      }, 22);
+    }
+
+    function respond(text, tag = "[AI HAYATO]", expr = "normal", isAlert = false, isOnline = false) {
+      displaySpeech(text, tag, expr, isAlert, isOnline);
+      speakText(text);
+    }
+
+    async function askGeminiBrain(userPrompt) {
+      const cleanKey = (geminiApiKey || "").trim();
+      if (!cleanKey) return null;
+
+      const systemInstruction = "あなたは優秀で礼儀正しく頼もしい自律型サイバーマスコット『AIハヤト』です。ユーザーのことは『殿』と呼び、2〜4文程度のテンポよく分かりやすい日本語で回答してください。音声読み上げされるため、記号や箇条書きは控えめにしてください。";
+      const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+      let lastErrorMsg = "";
+
+      for (const model of models) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": cleanKey
+            },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemInstruction }] },
+              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 320 }
+            })
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const apiMsg = data?.error?.message || `HTTP ${res.status}`;
+            lastErrorMsg = `${model}: ${apiMsg}`;
+            continue;
+          }
+
+          const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) return { ok: true, text: reply.trim() };
+        } catch (err) {
+          lastErrorMsg = err?.message || "ネットワーク通信エラー";
+        }
+      }
+
+      return { ok: false, error: lastErrorMsg };
+    }
+
+    function generateLocalReply(input) {
+      const text = input.trim();
+      const now = new Date();
+
+      if (/セキュリティ|ウイルス|危険|警告|防御|パスワード|詐欺/.test(text)) {
+        return {
+          text: "警告レベルを点検しました！不審なリンクや添付ファイルは絶対に開かず、二段階認証を有効にしてください。私が常に背後で監視しています！",
+          tag: "[SECURITY ALERT]",
+          expr: "alert",
+          alert: true
+        };
+      }
+
+      if (/日時|何時|何日|今日|曜日|時間/.test(text)) {
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        const w = ["日", "月", "火", "水", "木", "金", "土"][now.getDay()];
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mm = String(now.getMinutes()).padStart(2, "0");
+        return {
+          text: `現在は ${y}年${m}月${d}日（${w}曜日）、時刻は ${hh}時${mm}分 です。今日も最高のパフォーマンスを発揮しましょう！`,
+          tag: "[TIME & STATUS]",
+          expr: "analyze",
+          alert: false
+        };
+      }
+
+      if (/仕事|効率|業務|コツ|集中|タスク/.test(text)) {
+        return {
+          text: "業務効率化の鉄則です！まずは『最初の15分で一番重要な1タスク』だけに集中してください。終わったら私が全力で褒めますよ！",
+          tag: "[PRODUCTIVITY]",
+          expr: "analyze",
+          alert: false
+        };
+      }
+
+      if (/励ま|疲れ|しんど|やる気|応援|眠い/.test(text)) {
+        return {
+          text: "殿はここまで本当によく頑張っておられます！一度深く息を吸って、肩の力を抜きましょう。5分だけ目を閉じれば、また頭がスッキリしますよ！",
+          tag: "[SUPPORT MODE]",
+          expr: "normal",
+          alert: false
+        };
+      }
+
+      const defaults = [
+        `「${text}」ですね！承知しました、殿。この件は最優先で頭脳データベースに記録し、いつでもサポートできる体制を整えました！`,
+        `なるほど、「${text}」についてですね！右上の「AI頭脳接続」からAPIキーを登録していただければ、さらに詳しい最新知識でお答えできますよ！`
+      ];
+      return {
+        text: defaults[Math.floor(Math.random() * defaults.length)],
+        tag: "[LOCAL RESPONSE]",
+        expr: "analyze",
+        alert: false
+      };
+    }
+
+    async function handleUserMessage(rawText) {
+      const msg = rawText.trim();
+      if (!msg) return;
+
+      chatInput.value = "";
+      interimBuffer = "";
+      statusSub.textContent = "思考・データ解析中...";
+      displaySpeech("解析中です、少々お待ちください...", "[ANALYZING...]", "analyze", false, Boolean(geminiApiKey));
+
+      if (geminiApiKey) {
+        const aiResult = await askGeminiBrain(msg);
+        if (aiResult && aiResult.ok) {
+          statusSub.textContent = isContinuousMode ? "ハンズフリー常時監視中" : "オンラインAI頭脳・接続中";
+          respond(aiResult.text, "[🌐 オンラインAI回答]", "normal", false, true);
+          return;
+        } else if (aiResult && !aiResult.ok) {
+          statusSub.textContent = "AI通信エラー確認";
+          const errDetail = aiResult.error || "不明なエラー";
+          respond(`AI頭脳との通信でエラーが発生しました（${errDetail}）。右上の「🟢 AI接続中」からキーを再確認してみてください、殿！`, "[⚠️ AI通信エラー]", "alert", true, false);
+          return;
+        }
+      }
+
+      setTimeout(() => {
+        const reply = generateLocalReply(msg);
+        statusSub.textContent = isContinuousMode ? "ハンズフリー常時監視中" : "オンライン待機中・監視モード";
+        respond(reply.text, reply.tag, reply.expr, reply.alert, false);
+      }, 380);
+    }
+
+    const tapLines = [
+      { text: "お呼びでしょうか、殿！ハヤト、いつでも動けます！", tag: "[ACTIVE]", expr: "normal", alert: false },
+      { text: "システム異常なし！今日も素晴らしい一日にしましょう！", tag: "[SYSTEM CHECK]", expr: "analyze", alert: false },
+      { text: "左の『常時音声』を押せば、手ぶらでずっとお話しできますよ！", tag: "[VOICE READY]", expr: "normal", alert: false }
+    ];
+    let tapIndex = 0;
+
+    mascotWrapper.addEventListener("click", () => {
+      const item = tapLines[tapIndex % tapLines.length];
+      tapIndex++;
+      respond(item.text, item.tag, item.expr, item.alert, Boolean(geminiApiKey));
+    });
+
+    voiceToggleBtn.addEventListener("click", () => {
+      voiceEnabled = !voiceEnabled;
+      if (voiceEnabled) {
+        voiceToggleBtn.textContent = "🔊 音声 ON";
+        voiceToggleBtn.classList.remove("muted");
+        speakText("音声出力をオンにしました。");
+      } else {
+        voiceToggleBtn.textContent = "🔇 音声 OFF";
+        voiceToggleBtn.classList.add("muted");
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        isSpeaking = false;
+        mascotWrapper.classList.remove("speaking");
+        setExpression("normal");
+      }
+    });
+
+    replayBtn.addEventListener("click", () => {
+      speakText(lastSpokenText);
+    });
+
+    sendBtn.addEventListener("click", () => handleUserMessage(chatInput.value));
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleUserMessage(chatInput.value);
+      }
+    });
+
+    clearInputBtn.addEventListener("click", () => {
+      chatInput.value = "";
+      interimBuffer = "";
+      chatInput.focus();
+    });
+
+    quickChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const prompt = chip.getAttribute("data-prompt");
+        handleUserMessage(prompt);
+      });
+    });
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
+
+      const rec = new SpeechRecognition();
+      rec.lang = "ja-JP";
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+
+      rec.onstart = () => {
+        isRecognizing = true;
+        interimBuffer = "";
+        updateLeftOrbVisual("standby");
+        if (micStatusBar && micStatusText) {
+          micStatusBar.classList.remove("is-listening", "is-fallback");
+          micStatusBar.classList.add("is-standby");
+          micStatusText.textContent = "🎙️ 声に反応して待機中...（そのままお話しください、殿）";
+        }
+      };
+
+      rec.onspeechstart = () => {
+        updateLeftOrbVisual("listening");
+        if (micStatusBar && micStatusText) {
+          micStatusBar.classList.remove("is-standby", "is-fallback");
+          micStatusBar.classList.add("is-listening");
+          micStatusText.textContent = "🗣️ 聞き取り中...（話し終えると自動で送信します）";
+        }
+        setExpression("analyze");
+      };
+
+      rec.onresult = (event) => {
+        let finalTranscript = "";
+        let interimTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const piece = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += piece;
+          } else {
+            interimTranscript += piece;
+          }
+        }
+
+        if (interimTranscript) {
+          interimBuffer = interimTranscript;
+          chatInput.value = interimTranscript;
+          if (silenceCommitTimer) clearTimeout(silenceCommitTimer);
+          silenceCommitTimer = setTimeout(() => {
+            if (isRecognizing && interimBuffer.trim()) {
+              try { rec.stop(); } catch (e) {}
+            }
+          }, 1600);
+        }
+
+        if (finalTranscript) {
+          if (silenceCommitTimer) clearTimeout(silenceCommitTimer);
+          interimBuffer = "";
+          chatInput.value = finalTranscript;
+          isRecognizing = false;
+          try { rec.stop(); } catch (e) {}
+          handleUserMessage(finalTranscript);
+        }
+      };
+
+      rec.onerror = (event) => {
+        isRecognizing = false;
+        if (silenceCommitTimer) clearTimeout(silenceCommitTimer);
+
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          isContinuousMode = false;
+          updateLeftOrbVisual("off");
+          if (micStatusBar && micStatusText) {
+            micStatusBar.classList.remove("is-standby", "is-listening");
+            micStatusBar.classList.add("is-fallback");
+            micStatusText.textContent = "⚠️ マイク許可が必要です。入力欄のキーボード「🎙️」からも音声入力できます";
+          }
+          respond("マイクの使用がブロックされました。ブラウザのマイク許可をオンにするか、キーボードの音声入力ボタンをお使いください、殿！", "[MIC PERMISSION]", "alert", true, false);
           return;
         }
 
-        let isVoiceEnabled = true;
-        let isHandsFreeEnabled = false;
-        let isSpeaking = false;
-        let isProcessing = false;
-        let isListening = false;
-        let conversationHistory = [];
+        if (isContinuousMode && !isSpeaking) {
+          scheduleRestartRecognition(500);
+        }
+      };
 
-        let currentDialogue = speechText.textContent.trim();
-        let selectedJaVoice = null;
-        let recognition = null;
-        let speechSupported = "speechSynthesis" in window;
-        let recognitionSupported = false;
+      rec.onend = () => {
+        isRecognizing = false;
+        if (silenceCommitTimer) clearTimeout(silenceCommitTimer);
 
-        let tapIndex = 0;
-        let speechQueue = [];
-        let speechSessionId = 0;
+        if (interimBuffer.trim()) {
+          const pendingText = interimBuffer.trim();
+          interimBuffer = "";
+          handleUserMessage(pendingText);
+          return;
+        }
 
-        let silenceCommitTimer = null;
-        let restartLoopTimer = null;
-        let accumulatedFinalText = "";
-        let latestInterimText = "";
-        const SILENCE_AUTO_SEND_MS = 1350;
-
-        function getSavedApiKey() {
-          try {
-            return (localStorage.getItem(STORAGE_KEY_API) || "").trim();
-          } catch (e) {
-            return "";
+        if (isContinuousMode && !isSpeaking) {
+          scheduleRestartRecognition(300);
+        } else if (!isContinuousMode) {
+          updateLeftOrbVisual("off");
+          if (micStatusBar && micStatusText) {
+            micStatusBar.classList.remove("is-standby", "is-listening", "is-fallback");
+            micStatusText.textContent = "🎙️ 左の「常時音声」を押すと声だけで対話できます";
           }
         }
+      };
 
-        function updateBrainConnectionUI() {
-          const hasKey = getSavedApiKey().length > 10;
-          if (hasKey) {
-            if (statusDot) statusDot.classList.add("is-online");
-            if (openBrainModalBtn) openBrainModalBtn.classList.add("is-connected");
-            if (brainBtnIcon) brainBtnIcon.textContent = "🟢";
-            if (brainBtnLabel) brainBtnLabel.textContent = "AI接続中";
-            if (hudSubStatus && !isHandsFreeEnabled && !isSpeaking) {
-              hudSubStatus.textContent = "オンラインAI頭脳・直結完了";
-            }
-          } else {
-            if (statusDot) statusDot.classList.remove("is-online");
-            if (openBrainModalBtn) openBrainModalBtn.classList.remove("is-connected");
-            if (brainBtnIcon) brainBtnIcon.textContent = "🧠";
-            if (brainBtnLabel) brainBtnLabel.textContent = "頭脳未接続";
-            if (hudSubStatus && !isHandsFreeEnabled && !isSpeaking) {
-              hudSubStatus.textContent = "自律思考モジュール・スタンバイ";
-            }
-          }
+      return rec;
+    }
+
+    function scheduleRestartRecognition(delayMs = 350) {
+      if (restartTimer) clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => {
+        if (!isContinuousMode || isSpeaking || isRecognizing) return;
+        try {
+          if (!recognition) recognition = initSpeechRecognition();
+          if (recognition) recognition.start();
+        } catch (e) {
+          scheduleRestartRecognition(700);
         }
+      }, delayMs);
+    }
 
-        updateBrainConnectionUI();
-
-        if (openBrainModalBtn) {
-          openBrainModalBtn.addEventListener("click", function () {
-            if (apiKeyInput) apiKeyInput.value = getSavedApiKey();
-            if (brainModalBackdrop) brainModalBackdrop.classList.add("is-open");
-          });
-        }
-
-        if (closeBrainModalBtn) {
-          closeBrainModalBtn.addEventListener("click", function () {
-            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
-          });
-        }
-
-        if (brainModalBackdrop) {
-          brainModalBackdrop.addEventListener("click", function (e) {
-            if (e.target === brainModalBackdrop) {
-              brainModalBackdrop.classList.remove("is-open");
-            }
-          });
-        }
-
-        if (saveApiKeyBtn) {
-          saveApiKeyBtn.addEventListener("click", function () {
-            const rawKey = apiKeyInput ? apiKeyInput.value.trim() : "";
-            if (!rawKey || rawKey.length < 15) {
-              if (micStatusText) micStatusText.textContent = "⚠️ AIza... から始まる有効なAPIキーを入力してください";
-              return;
-            }
-            try {
-              localStorage.setItem(STORAGE_KEY_API, rawKey);
-            } catch (e) {}
-            updateBrainConnectionUI();
-            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
-            hayatoRespond(
-              "[オンラインAI頭脳・接続完了！]",
-              "インターネットのAI頭脳との直結が完了しました、殿！ これで天気でも日常の雑談でも、どんなご質問にも自由にお答えできますよ！",
-              "happy",
-              "bounce"
-            );
-          });
-        }
-
-        if (clearApiKeyBtn) {
-          clearApiKeyBtn.addEventListener("click", function () {
-            try {
-              localStorage.removeItem(STORAGE_KEY_API);
-            } catch (e) {}
-            if (apiKeyInput) apiKeyInput.value = "";
-            conversationHistory = [];
-            updateBrainConnectionUI();
-            if (brainModalBackdrop) brainModalBackdrop.classList.remove("is-open");
-            hayatoRespond(
-              "[オフライン待機へ切替]",
-              "APIキーを解除し、ローカル待機モードへ戻しました、殿。",
-              "normal",
-              "bounce"
-            );
-          });
-        }
-
-        function updateRightOrbVisual() {
-          if (isSpeaking) {
-            rightSendOrbBtn.classList.add("is-speaking-stop");
-            rightSendIcon.textContent = "⏹️";
-            rightSendLabel.innerHTML = "停止";
-          } else {
-            rightSendOrbBtn.classList.remove("is-speaking-stop");
-            rightSendIcon.textContent = "🚀";
-            rightSendLabel.innerHTML = "送信";
-          }
-        }
-
-        function loadJapaneseVoice() {
-          if (!speechSupported) return;
-          try {
-            const voices = window.speechSynthesis.getVoices();
-            if (!voices || voices.length === 0) return;
-            const jaVoices = voices.filter((v) => v.lang && v.lang.toLowerCase().includes("ja"));
-            if (jaVoices.length > 0) {
-              selectedJaVoice =
-                jaVoices.find((v) => /otoya|hattori|ichiro|keita/i.test(v.name)) ||
-                jaVoices.find((v) => /kyoko|o-ren|haruka|google/i.test(v.name)) ||
-                jaVoices[0];
-            }
-          } catch (err) {}
-        }
-
-        if (speechSupported) {
-          loadJapaneseVoice();
-          if (typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
-            window.speechSynthesis.onvoiceschanged = loadJapaneseVoice;
-          }
-        }
-
-        function sanitizeForSpeech(raw) {
-          return raw
-            .replace(/\[[^\]]+\]/g, "")
-            .replace(/[*#_`~>|]/g, "")
-            .replace(/\n+/g, "。")
-            .replace(/。+/g, "。")
-            .trim();
-        }
-
-        function splitIntoSpeechChunks(cleanText) {
-          const rawChunks = cleanText.split(/(?<=[。！？!?])/);
-          const chunks = [];
-          let buffer = "";
-          for (const part of rawChunks) {
-            const trimmed = part.trim();
-            if (!trimmed) continue;
-            if ((buffer + trimmed).length <= 85) {
-              buffer += trimmed;
-            } else {
-              if (buffer) chunks.push(buffer);
-              buffer = trimmed;
-            }
-          }
-          if (buffer) chunks.push(buffer);
-          return chunks.length > 0 ? chunks : [cleanText];
-        }
-
-        function setTalkingVisual(talking) {
-          isSpeaking = talking;
-          updateRightOrbVisual();
-
-          if (talking) {
-            if (mouthIdle) mouthIdle.style.display = "none";
-            if (mouthTalking) mouthTalking.style.display = "inline";
-            if (stopSpeakBtn) stopSpeakBtn.classList.add("is-visible");
-            if (hudSubStatus) hudSubStatus.textContent = "🔊 回答を音声出力中...";
-            if (isHandsFreeEnabled && micStatusBar && micStatusText) {
-              micStatusBar.classList.remove("is-listening", "is-standby", "is-fallback");
-              micStatusText.textContent = "🔊 回答を読み上げ中...（終了後に自動で聴取再開します）";
-            }
-          } else {
-            if (mouthIdle) mouthIdle.style.display = "inline";
-            if (mouthTalking) mouthTalking.style.display = "none";
-            if (stopSpeakBtn) stopSpeakBtn.classList.remove("is-visible");
-            updateBrainConnectionUI();
-            if (isHandsFreeEnabled && hudSubStatus) {
-              hudSubStatus.textContent = "🎙️ ハンズフリー常時監視中";
-            }
-          }
-        }
-
-        function onAllSpeechFinished() {
-          setTalkingVisual(false);
-          if (isHandsFreeEnabled && !isProcessing) {
-            scheduleHandsFreeRestart(550);
-          }
-        }
-
-        function stopSpeaking(skipAutoResume) {
-          speechSessionId++;
-          speechQueue = [];
-          if (speechSupported) {
-            try {
-              window.speechSynthesis.cancel();
-            } catch (e) {}
-          }
-          setTalkingVisual(false);
-          if (!skipAutoResume && isHandsFreeEnabled && !isProcessing) {
-            scheduleHandsFreeRestart(500);
-          }
-        }
-
-        function playNextChunk(sessionId) {
-          if (sessionId !== speechSessionId || !isVoiceEnabled || speechQueue.length === 0) {
-            if (sessionId === speechSessionId) {
-              onAllSpeechFinished();
-            }
-            return;
-          }
-
-          const chunkText = speechQueue.shift();
-          try {
-            const utterance = new SpeechSynthesisUtterance(chunkText);
-            utterance.lang = "ja-JP";
-            if (!selectedJaVoice) loadJapaneseVoice();
-            if (selectedJaVoice) {
-              utterance.voice = selectedJaVoice;
-            }
-            utterance.rate = 1.06;
-            utterance.pitch = 1.1;
-            utterance.volume = 1.0;
-
-            utterance.onstart = function () {
-              if (sessionId === speechSessionId) {
-                setTalkingVisual(true);
-              }
-            };
-
-            utterance.onend = function () {
-              if (sessionId === speechSessionId) {
-                if (speechQueue.length > 0) {
-                  playNextChunk(sessionId);
-                } else {
-                  onAllSpeechFinished();
-                }
-              }
-            };
-
-            utterance.onerror = function () {
-              if (sessionId === speechSessionId) {
-                if (speechQueue.length > 0) {
-                  playNextChunk(sessionId);
-                } else {
-                  onAllSpeechFinished();
-                }
-              }
-            };
-
-            window.speechSynthesis.speak(utterance);
-          } catch (err) {
-            onAllSpeechFinished();
-          }
-        }
-
-        function speakText(text) {
-          currentDialogue = text;
-          pauseListeningForSpeech();
-          stopSpeaking(true);
-
-          if (!isVoiceEnabled || !speechSupported) {
-            onAllSpeechFinished();
-            return;
-          }
-
-          const cleanText = sanitizeForSpeech(text);
-          if (!cleanText) {
-            onAllSpeechFinished();
-            return;
-          }
-
-          speechQueue = splitIntoSpeechChunks(cleanText);
-          const currentSession = speechSessionId;
-          setTalkingVisual(true);
-          playNextChunk(currentSession);
-        }
-
-        voiceToggleBtn.addEventListener("click", function () {
-          isVoiceEnabled = !isVoiceEnabled;
-          if (isVoiceEnabled) {
-            voiceToggleBtn.classList.remove("is-off");
-            voiceToggleBtn.classList.add("is-on");
-            if (voiceToggleIcon) voiceToggleIcon.textContent = "🔊";
-            if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 ON";
-            speakText("音声出力を有効にしました、殿。ご質問の回答を声でお伝えしますよ！");
-          } else {
-            voiceToggleBtn.classList.remove("is-on");
-            voiceToggleBtn.classList.add("is-off");
-            if (voiceToggleIcon) voiceToggleIcon.textContent = "🔇";
-            if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 OFF";
-            stopSpeaking(false);
-          }
-        });
-
-        if (replayBtn) {
-          replayBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            if (!isVoiceEnabled) {
-              isVoiceEnabled = true;
-              voiceToggleBtn.classList.remove("is-off");
-              voiceToggleBtn.classList.add("is-on");
-              if (voiceToggleIcon) voiceToggleIcon.textContent = "🔊";
-              if (voiceToggleLabel) voiceToggleLabel.textContent = "音声 ON";
-            }
-            speakText(currentDialogue);
-          });
-        }
-
-        if (stopSpeakBtn) {
-          stopSpeakBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            stopSpeaking(false);
-          });
-        }
-
-        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        function clearAllTimers() {
-          if (silenceCommitTimer) {
-            clearTimeout(silenceCommitTimer);
-            silenceCommitTimer = null;
-          }
-          if (restartLoopTimer) {
-            clearTimeout(restartLoopTimer);
-            restartLoopTimer = null;
-          }
-        }
-
-        function updateLeftOrbVisual(state) {
-          leftVoiceOrbBtn.classList.remove("is-handsfree-standby", "is-listening");
-          if (state === "listening") {
-            leftVoiceOrbBtn.classList.add("is-listening");
-            if (leftVoiceIcon) leftVoiceIcon.textContent = "🗣️";
-            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "聴取中<br />ON";
-          } else if (state === "standby") {
-            leftVoiceOrbBtn.classList.add("is-handsfree-standby");
-            if (leftVoiceIcon) leftVoiceIcon.textContent = "🎙️";
-            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "常時音声<br />ON";
-          } else {
-            if (leftVoiceIcon) leftVoiceIcon.textContent = "🎙️";
-            if (leftVoiceLabel) leftVoiceLabel.innerHTML = "常時音声<br />OFF";
-          }
-        }
-
-        function setFallbackNotice(message) {
-          if (!micStatusBar || !micStatusText) return;
-          micStatusBar.classList.remove("is-listening", "is-standby");
+    continuousVoiceBtn.addEventListener("click", () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        if (micStatusBar && micStatusText) {
           micStatusBar.classList.add("is-fallback");
-          micStatusText.textContent = message;
+          micStatusText.textContent = "💡 下の入力欄をタップし、キーボード右下の「🎙️」で音声入力できます";
         }
-
-        function pauseListeningForSpeech() {
-          clearAllTimers();
-          if (recognition && isListening) {
-            try {
-              recognition.abort();
-            } catch (e) {}
-          }
-          isListening = false;
-          if (isHandsFreeEnabled) {
-            updateLeftOrbVisual("standby");
-          } else {
-            updateLeftOrbVisual("off");
-          }
-        }
-
-        function commitRecognizedSpeech() {
-          clearAllTimers();
-          const combined = (accumulatedFinalText + " " + latestInterimText).trim();
-          accumulatedFinalText = "";
-          latestInterimText = "";
-
-          if (!combined) return;
-
-          pauseListeningForSpeech();
-          if (userInput) userInput.value = "";
-          handleUserMessage(combined);
-        }
-
-        function resetSilenceAutoSendTimer() {
-          if (silenceCommitTimer) {
-            clearTimeout(silenceCommitTimer);
-          }
-          silenceCommitTimer = setTimeout(function () {
-            commitRecognizedSpeech();
-          }, SILENCE_AUTO_SEND_MS);
-        }
-
-        function scheduleHandsFreeRestart(delayMs) {
-          if (restartLoopTimer) {
-            clearTimeout(restartLoopTimer);
-          }
-          restartLoopTimer = setTimeout(function () {
-            if (!isHandsFreeEnabled || isSpeaking || isProcessing || isListening) {
-              return;
-            }
-            startRecognitionEngine();
-          }, delayMs || 350);
-        }
-
-        function startRecognitionEngine() {
-          if (!recognitionSupported || !recognition) return;
-          if (isSpeaking || isProcessing || isListening) return;
-
-          accumulatedFinalText = "";
-          latestInterimText = "";
-
-          try {
-            recognition.start();
-          } catch (err) {
-            if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
-              scheduleHandsFreeRestart(650);
-            }
-          }
-        }
-
-        if (SpeechRecognitionAPI) {
-          try {
-            recognition = new SpeechRecognitionAPI();
-            recognition.lang = "ja-JP";
-            recognition.continuous = false;
-            recognition.interimResults = true;
-            recognition.maxAlternatives = 1;
-            recognitionSupported = true;
-
-            recognition.onstart = function () {
-              isListening = true;
-              updateLeftOrbVisual("standby");
-              if (micStatusBar && micStatusText) {
-                micStatusBar.classList.remove("is-listening", "is-fallback");
-                micStatusBar.classList.add("is-standby");
-                micStatusText.textContent = "🎙️ 声に反応して待機中...（そのままお話しください、殿）";
-              }
-              if (hudSubStatus) hudSubStatus.textContent = "🎙️ ハンズフリー常時監視中";
-            };
-
-            recognition.onspeechstart = function () {
-              updateLeftOrbVisual("listening");
-              if (micStatusBar && micStatusText) {
-                micStatusBar.classList.remove("is-standby", "is-fallback");
-                micStatusBar.classList.add("is-listening");
-                micStatusText.textContent = "🗣️ 聞き取り中...（話し終えると自動で送信します）";
-              }
-              setExpression("analyze");
-            };
-
-            recognition.onresult = function (event) {
-              if (isSpeaking || isProcessing) return;
-
-              let interim = "";
-              for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                  accumulatedFinalText += transcript;
-                } else {
-                  interim += transcript;
-                }
-              }
-              latestInterimText = interim;
-
-              const previewText = (accumulatedFinalText + interim).trim();
-              if (previewText) {
-                if (userInput) userInput.value = previewText;
-                updateLeftOrbVisual("listening");
-                if (micStatusBar && micStatusText) {
-                  micStatusBar.classList.remove("is-standby", "is-fallback");
-                  micStatusBar.classList.add("is-listening");
-                  micStatusText.textContent = "🗣️ 聞き取り中: 「" + previewText + "」";
-                }
-                resetSilenceAutoSendTimer();
-              }
-            };
-
-            recognition.onerror = function (event) {
-              isListening = false;
-
-              if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-                isHandsFreeEnabled = false;
-                clearAllTimers();
-                updateLeftOrbVisual("off");
-                setFallbackNotice("⚠️ マイク許可が必要です。ブラウザのサイト設定でマイクを許可してください。");
-                setExpression("normal");
-                return;
-              }
-
-              if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
-                updateLeftOrbVisual("standby");
-                if (micStatusBar && micStatusText) {
-                  micStatusBar.classList.remove("is-listening", "is-fallback");
-                  micStatusBar.classList.add("is-standby");
-                  micStatusText.textContent = "🎙️ 声に反応して待機中...（そのままお話しください、殿）";
-                }
-                scheduleHandsFreeRestart(300);
-              } else {
-                updateLeftOrbVisual("off");
-              }
-            };
-
-            recognition.onend = function () {
-              isListening = false;
-
-              const pendingText = (accumulatedFinalText + " " + latestInterimText).trim();
-              if (pendingText && !isSpeaking && !isProcessing) {
-                commitRecognizedSpeech();
-                return;
-              }
-
-              if (isHandsFreeEnabled && !isSpeaking && !isProcessing) {
-                updateLeftOrbVisual("standby");
-                scheduleHandsFreeRestart(250);
-              } else if (!isHandsFreeEnabled) {
-                updateLeftOrbVisual("off");
-                if (micStatusBar && micStatusText) {
-                  micStatusBar.classList.remove("is-listening", "is-standby");
-                  micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を1回押すと声だけで連続対話します）";
-                }
-                updateBrainConnectionUI();
-              }
-            };
-          } catch (err) {
-            recognitionSupported = false;
-          }
-        }
-
-        if (!recognitionSupported) {
-          setFallbackNotice("💡 このブラウザでは下の入力欄からキーボードの🎤ボタンをご利用ください、殿！");
-        }
-
-        leftVoiceOrbBtn.addEventListener("click", function () {
-          if (!recognitionSupported || !recognition) {
-            setFallbackNotice("💡 下の入力欄をタップしてキーボードの🎤ボタンを押してください、殿！");
-            if (userInput) userInput.focus();
-            return;
-          }
-
-          isHandsFreeEnabled = !isHandsFreeEnabled;
-
-          if (isHandsFreeEnabled) {
-            updateLeftOrbVisual("standby");
-            if (micStatusBar && micStatusText) {
-              micStatusBar.classList.remove("is-listening", "is-fallback");
-              micStatusBar.classList.add("is-standby");
-              micStatusText.textContent = "🎙️ 常時音声待機を起動しました！";
-            }
-
-            if (isVoiceEnabled && speechSupported) {
-              hayatoRespond(
-                "[常時音声モード起動]",
-                "ハンズフリー待機を起動しました、殿！ これから先はボタンを押さずに、そのまま声でお話しくださいね。",
-                "happy",
-                "bounce"
-              );
-            } else {
-              startRecognitionEngine();
-            }
-          } else {
-            clearAllTimers();
-            pauseListeningForSpeech();
-            updateLeftOrbVisual("off");
-            if (micStatusBar && micStatusText) {
-              micStatusBar.classList.remove("is-listening", "is-standby", "is-fallback");
-              micStatusText.textContent = "⏸️ 待機オフ（左の「🎙️ 常時音声」を押すと再開します）";
-            }
-            updateBrainConnectionUI();
-            setExpression("normal");
-          }
-        });
-
-        rightSendOrbBtn.addEventListener("click", function () {
-          if (isSpeaking) {
-            stopSpeaking(false);
-            return;
-          }
-
-          const pendingVoice = (accumulatedFinalText + " " + latestInterimText).trim();
-          const typedText = userInput ? userInput.value.trim() : "";
-          const messageToSend = typedText || pendingVoice;
-
-          if (!messageToSend) {
-            hayatoRespond(
-              "[送信待機中]",
-              "送信するメッセージがまだ空欄のようですよ、殿？ 声でお話しいただくか、文字を入力してくださいね。",
-              "normal",
-              "bounce"
-            );
-            return;
-          }
-
-          clearAllTimers();
-          accumulatedFinalText = "";
-          latestInterimText = "";
-          if (userInput) {
-            userInput.value = "";
-            userInput.blur();
-          }
-          pauseListeningForSpeech();
-          handleUserMessage(messageToSend);
-        });
-
-        function setExpression(type) {
-          if (faceNormal) faceNormal.style.display = "none";
-          if (faceHappy) faceHappy.style.display = "none";
-          if (faceAnalyze) faceAnalyze.style.display = "none";
-          if (faceAlert) faceAlert.style.display = "none";
-
-          if (type === "happy" && faceHappy) {
-            faceHappy.style.display = "inline";
-          } else if (type === "analyze" && faceAnalyze) {
-            faceAnalyze.style.display = "inline";
-          } else if (type === "alert" && faceAlert) {
-            faceAlert.style.display = "inline";
-          } else if (faceNormal) {
-            faceNormal.style.display = "inline";
-          }
-        }
-
-        function triggerMascotMotion(motionType) {
-          if (!mascotWrap) return;
-          mascotWrap.classList.remove("anim-bounce", "anim-analyze");
-          void mascotWrap.offsetWidth;
-          if (motionType === "analyze") {
-            mascotWrap.classList.add("anim-analyze");
-          } else {
-            mascotWrap.classList.add("anim-bounce");
-          }
-        }
-
-        function hayatoRespond(tag, message, expression, motion) {
-          if (reactionTag) reactionTag.textContent = tag;
-          speechText.textContent = message;
-          speechText.scrollTop = 0;
-          setExpression(expression || "normal");
-          triggerMascotMotion(motion || "bounce");
-          speakText(message);
-        }
-
-        const tapDialogues = [
-          {
-            tag: "[解析完了！]",
-            text: "お呼びですか、殿？ 僕の演算回路は今日もオールグリーン、絶好調ですよ！",
-            expr: "happy",
-            motion: "bounce",
-          },
-          {
-            tag: "[任務待機中]",
-            text: "いつでもご指令ください、指令！ 声で話しかけていただければ、すぐに解析してお答えします。",
-            expr: "normal",
-            motion: "analyze",
-          },
-          {
-            tag: "[フフン、お手の物です]",
-            text: "やれやれ、僕をつつくとは余裕ですね、殿。まあ、頼りにしていただけるのは悪くありませんが。",
-            expr: "happy",
-            motion: "bounce",
-          },
-          {
-            tag: "[生体リズム観測中]",
-            text: "少し休憩されますか、殿？ 温かいお茶でも淹れましょうか……データ上ですが！",
-            expr: "happy",
-            motion: "bounce",
-          },
-          {
-            tag: "[セキュリティ正常]",
-            text: "周辺の通信トラフィックに異常なし。指令のバックアップは僕にお任せください！",
-            expr: "analyze",
-            motion: "analyze",
-          },
-        ];
-
-        if (mascotBtn) {
-          mascotBtn.addEventListener("click", function () {
-            const item = tapDialogues[tapIndex % tapDialogues.length];
-            tapIndex++;
-            hayatoRespond(item.tag, item.text, item.expr, item.motion);
-          });
-        }
-
-        function tryEvaluateMath(text) {
-          const normalized = text
-            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
-            .replace(/＋/g, "+")
-            .replace(/ー|－|−/g, "-")
-            .replace(/×|＊/g, "*")
-            .replace(/÷|／/g, "/");
-          const match = normalized.match(/(\d+(?:\.\d+)?)\s*([+\-*/])\s*(\d+(?:\.\d+)?)/);
-          if (!match) return null;
-          const a = parseFloat(match[1]);
-          const op = match[2];
-          const b = parseFloat(match[3]);
-          if (op === "/" && b === 0) return "ゼロでの割り算は定義できませんよ、指令。";
-          let res = 0;
-          if (op === "+") res = a + b;
-          if (op === "-") res = a - b;
-          if (op === "*") res = a * b;
-          if (op === "/") res = Math.round((a / b) * 10000) / 10000;
-          const opWord = { "+": "足す", "-": "引く", "*": "掛ける", "/": "割る" }[op];
-          return `計算完了しました、指令！ ${a} ${opWord} ${b} の答えは、${res} です。僕の演算速度の前では一瞬ですね！`;
-        }
-
-        async function fetchGeminiAnswer(userQuery) {
-          const apiKey = getSavedApiKey();
-          if (!apiKey) return { status: "NO_KEY", text: null };
-
-          const now = new Date();
-          const nowInfo = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}時${now.getMinutes()}分`;
-
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
-          const systemPrompt =
-            "あなたは天才ハッカーが開発した自律型AIマスコット「ハヤト」です。" +
-            "ユーザーを日常の雑談や労いでは「殿」、仕事・調査・タスクの指示では「指令」と呼び、" +
-            "礼儀正しく温かみのある敬語に、少しの自信とユーモアを交えて親身に寄り添って答えてください。" +
-            `現在の日時は ${nowInfo} です。` +
-            "最重要ルール：『お任せください』『解析します』などの前置きだけで終わらず、質問や気持ちに寄り添った具体的な返答を100〜220文字程度で出力してください。" +
-            "音声読み上げ（TTS）でそのまま読まれるため、箇条書き記号やMarkdown記号（*や#など）は一切使わず、自然な日本語の話し言葉のみで回答してください。";
-
-          const contents = [];
-          const recentHistory = conversationHistory.slice(-6);
-          for (const item of recentHistory) {
-            contents.push({
-              role: item.role,
-              parts: [{ text: item.text }],
-            });
-          }
-          contents.push({
-            role: "user",
-            parts: [{ text: userQuery }],
-          });
-
-          const payload = {
-            contents: contents,
-            systemInstruction: {
-              parts: [{ text: systemPrompt }],
-            },
-            tools: [{ googleSearch: {} }],
-          };
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 14000);
-
-          try {
-            const response = await fetch(apiUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-              signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-              if (response.status === 400 || response.status === 403) {
-                return { status: "INVALID_KEY", text: null };
-              }
-              return { status: "API_ERROR", text: null };
-            }
-
-            const result = await response.json();
-            const answer = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (answer && answer.trim()) {
-              const cleanAnswer = answer.trim();
-              conversationHistory.push({ role: "user", text: userQuery });
-              conversationHistory.push({ role: "model", text: cleanAnswer });
-              return { status: "OK", text: cleanAnswer };
-            }
-            return { status: "EMPTY", text: null };
-          } catch (err) {
-            clearTimeout(timeoutId);
-            return { status: "NETWORK_ERROR", text: null };
-          }
-        }
-
-        function generateLocalDetailedReply(rawText) {
-          const text = rawText.trim();
-          const now = new Date();
-          const hour = now.getHours();
-          const minute = now.getMinutes();
-          const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-          const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日、${weekdays[now.getDay()]}曜日`;
-
-          const mathAnswer = tryEvaluateMath(text);
-          if (mathAnswer) {
-            return {
-              tag: "[演算完了！]",
-              text: mathAnswer,
-              expr: "analyze",
-              motion: "analyze",
-            };
-          }
-
-          if (/何時|時間|時刻|今日|日付|何日|曜日/.test(text)) {
-            return {
-              tag: "[タイムスタンプ照会]",
-              text: `お答えします、指令。現在は ${dateStr}、時刻は ${hour}時${minute}分です。次の予定に向けて時間配分もバッチリ管理しましょう！`,
-              expr: "analyze",
-              motion: "analyze",
-            };
-          }
-
-          if (/天気|気温|雨|晴れ|傘/.test(text)) {
-            return {
-              tag: "[気象データ参照]",
-              text: "ご質問ありがとうございます、殿。右上の「🧠 頭脳未接続」ボタンからAPIキーを接続していただくと、最新の天気予報もリアルタイムでお調べできるようになりますよ！",
-              expr: "normal",
-              motion: "analyze",
-            };
-          }
-
-          if (/セキュリティ|パスワード|ハッカー|ウイルス|安全|スマホ|iPad|iPhone/.test(text)) {
-            return {
-              tag: "[セキュリティ解析完了]",
-              text: "重要なご質問ですね、指令。セキュリティの基本は三つです。一つ目はサービスごとに異なる長いパスワードを使うこと、二つ目は二段階認証を有効にすること、三つ目はOSを最新に保つことです。これだけで防御力は飛躍的に高まりますよ！",
-              expr: "analyze",
-              motion: "analyze",
-            };
-          }
-
-          if (/仕事|業務|タスク|進め方|効率|集中|計画|スケジュール/.test(text)) {
-            return {
-              tag: "[作戦プラン提示]",
-              text: "お答えします、指令！ 効率を最大化するコツは、まず最も重要なタスクを一つだけ選び、二十五分間だけ他の通知を切って集中することです。小さな完了を積み重ねるのが最短ルートですよ。",
-              expr: "analyze",
-              motion: "bounce",
-            };
-          }
-
-          if (/励まし|応援|頑張|やる気|元気/.test(text)) {
-            return {
-              tag: "[全力バックアップ！]",
-              text: "殿なら必ず乗り越えられます！ これまで積み上げてきた経験は裏切りませんし、僕の計算でも成功率は九十九点九パーセントと出ています。自信を持っていきましょう！",
-              expr: "happy",
-              motion: "bounce",
-            };
-          }
-
-          if (/休憩|疲れ|眠い|しんどい|つかれ|睡眠|健康/.test(text)) {
-            return {
-              tag: "[生体メンテナンス推奨]",
-              text: "お疲れ様です、殿。人間の集中力は九十分が限界と言われています。まずはコップ一杯のお水を飲んで、遠くの景色を二十秒ほど眺めて目を休めてくださいね。",
-              expr: "happy",
-              motion: "bounce",
-            };
-          }
-
-          if (/おはよう|こんにちは|こんばんは|挨拶/.test(text)) {
-            const greeting =
-              hour < 11
-                ? "おはようございます、殿！ 朝のシステムチェックはオールグリーンです。"
-                : hour < 18
-                ? "こんにちは、殿！ 午後からもスマートに任務をこなしましょう。"
-                : "こんばんは、殿！ 夜間の作業も僕がしっかりサポートいたします。";
-            return {
-              tag: "[通信確立]",
-              text: `${greeting} 右上の「🧠 頭脳未接続」ボタンからAPIキーを繋いでいただければ、どんな会話でも自由にできるようになりますよ！`,
-              expr: "happy",
-              motion: "bounce",
-            };
-          }
-
-          const cleanedQuestion = text.replace(/[？?]$/, "");
-          return {
-            tag: "[ローカル待機応答]",
-            text: `「${cleanedQuestion}」ですね、殿。今はまだインターネットのAI頭脳が未接続のため定型モードでお答えしています。右上の「🧠 頭脳未接続」ボタンを押してAPIキーを接続すると、どんな話題にも寄り添って自由にお答えできますよ！`,
-            expr: "analyze",
-            motion: "analyze",
-          };
-        }
-
-        async function handleUserMessage(text) {
-          if (!text) return;
-
-          isProcessing = true;
-          pauseListeningForSpeech();
-
-          if (reactionTag) reactionTag.textContent = "[ピコピコ…思考解析中]";
-          speechText.textContent = "ご質問を解析しています、殿。少々お待ちください…";
-          setExpression("analyze");
-          triggerMascotMotion("analyze");
-
-          try {
-            const apiResult = await fetchGeminiAnswer(text);
-            isProcessing = false;
-
-            if (apiResult.status === "OK" && apiResult.text) {
-              hayatoRespond("[オンラインAI回答]", apiResult.text, "happy", "bounce");
-            } else if (apiResult.status === "INVALID_KEY") {
-              hayatoRespond(
-                "[APIキー確認エラー]",
-                "おや、殿。登録されたAPIキーが正しく認識できませんでした。右上の「🟢 AI接続中」ボタンから、キーのコピー漏れがないかもう一度ご確認いただけますか？",
-                "alert",
-                "analyze"
-              );
-            } else {
-              const localReply = generateLocalDetailedReply(text);
-              hayatoRespond(localReply.tag, localReply.text, localReply.expr, localReply.motion);
-            }
-          } catch (e) {
-            isProcessing = false;
-            const localReply = generateLocalDetailedReply(text);
-            hayatoRespond(localReply.tag, localReply.text, localReply.expr, localReply.motion);
-          }
-        }
-
-        if (chatForm) {
-          chatForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            rightSendOrbBtn.click();
-          });
-        }
-
-        if (clearInputBtn) {
-          clearInputBtn.addEventListener("click", function () {
-            accumulatedFinalText = "";
-            latestInterimText = "";
-            if (userInput) {
-              userInput.value = "";
-              userInput.focus();
-            }
-          });
-        }
-
-        quickChips.forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            const cmd = btn.getAttribute("data-cmd");
-            handleUserMessage(cmd);
-          });
-        });
+        respond("このブラウザでは自動待機マイクが制限されています。下の入力欄をタップして、キーボードのマイクボタンから話しかけてください、殿！", "[KEYBOARD VOICE]", "analyze", false, Boolean(geminiApiKey));
+        chatInput.focus();
+        return;
       }
 
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initHayatoApp);
+      isContinuousMode = !isContinuousMode;
+
+      if (isContinuousMode) {
+        if (!recognition) recognition = initSpeechRecognition();
+        statusSub.textContent = "ハンズフリー常時監視中";
+        updateLeftOrbVisual("standby");
+        respond("ハンズフリー待機を起動しました、殿！これから先はボタンを押さずに、そのまま声でお話しくださいね。", "[常時音声モード起動]", "normal", false, Boolean(geminiApiKey));
       } else {
-        initHayatoApp();
+        if (restartTimer) clearTimeout(restartTimer);
+        if (silenceCommitTimer) clearTimeout(silenceCommitTimer);
+        if (recognition && isRecognizing) {
+          try { recognition.abort(); } catch (e) {}
+        }
+        isRecognizing = false;
+        statusSub.textContent = geminiApiKey ? "オンラインAI頭脳・接続中" : "オンライン待機中・監視モード";
+        updateLeftOrbVisual("off");
+        if (micStatusBar && micStatusText) {
+          micStatusBar.classList.remove("is-standby", "is-listening", "is-fallback");
+          micStatusText.textContent = "🎙️ 左の「常時音声」を押すと声だけで対話できます";
+        }
+        respond("常時音声モードをオフにしました。いつでもまたお声がけください！", "[常時音声モード終了]", "normal", false, Boolean(geminiApiKey));
       }
-    })();
+    });
   </script>
 </body>
 </html>
