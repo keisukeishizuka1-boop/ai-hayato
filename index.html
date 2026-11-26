@@ -48,7 +48,6 @@
       padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
     }
 
-    /* 1. ステータスバー */
     .status-bar {
       display: flex;
       justify-content: space-between;
@@ -134,7 +133,6 @@
       box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
     }
 
-    /* 2. 中央エリア */
     .center-stage {
       flex: 1;
       display: flex;
@@ -233,7 +231,6 @@
       user-select: text;
     }
 
-    /* マスコット＋左右の操作オーブ配置エリア */
     .mascot-stage-row {
       display: flex;
       align-items: center;
@@ -243,7 +240,6 @@
       max-width: 560px;
     }
 
-    /* 左右のサイバーオーブボタン（常時音声・送信） */
     .side-orb {
       width: 74px;
       height: 74px;
@@ -313,7 +309,6 @@
       box-shadow: 0 0 18px rgba(26, 109, 255, 0.35), inset 0 0 12px rgba(0, 240, 255, 0.15);
     }
 
-    /* キャラクターコンテナ */
     .mascot-wrapper {
       position: relative;
       width: 196px;
@@ -397,7 +392,6 @@
       margin-top: -8px;
     }
 
-    /* 3. コントロールパネル */
     .control-panel {
       width: 100%;
       max-width: 560px;
@@ -515,7 +509,6 @@
       transform: scale(0.95);
     }
 
-    /* APIキー設定モーダル */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -608,7 +601,6 @@
 </head>
 <body>
 
-  <!-- 上部ステータスバー -->
   <header class="status-bar">
     <div class="status-left">
       <div class="status-dot" id="statusDot"></div>
@@ -623,7 +615,6 @@
     </div>
   </header>
 
-  <!-- 中央マスコットエリア -->
   <main class="center-stage">
     <div class="speech-bubble" id="speechBubble">
       <div class="bubble-header">
@@ -635,15 +626,12 @@
       </div>
     </div>
 
-    <!-- 左右のオーブボタン＋中央マスコット -->
     <div class="mascot-stage-row">
-      <!-- 左：常時音声ボタン -->
       <button class="side-orb" id="continuousVoiceBtn" aria-label="常時音声切り替え">
         <span class="orb-icon" id="continuousIcon">🎙️</span>
         <span class="orb-label" id="continuousLabel">常時音声<br>OFF</span>
       </button>
 
-      <!-- 中央：AIハヤト本体 -->
       <div class="mascot-wrapper" id="mascotWrapper" role="button" tabindex="0" aria-label="AIハヤトに話しかける">
         <div class="holo-ring"></div>
         <div class="holo-ring-inner"></div>
@@ -725,7 +713,6 @@
         </svg>
       </div>
 
-      <!-- 右：送信ボタン -->
       <button class="side-orb send-orb" id="sendBtn" aria-label="送信">
         <span class="orb-icon">🚀</span>
         <span class="orb-label">送信</span>
@@ -736,7 +723,6 @@
     <div class="tap-hint">▲ タップで対話 / 左右で音声・送信</div>
   </main>
 
-  <!-- 下部コントロールパネル -->
   <section class="control-panel">
     <div class="mic-status-bar" id="micStatusBar">
       <span id="micStatusText">🎙️ 左の「常時音声」を押すと声だけで対話できます</span>
@@ -756,7 +742,6 @@
     </div>
   </section>
 
-  <!-- APIキー設定モーダル -->
   <div class="modal-overlay" id="apiModal">
     <div class="modal-card">
       <div class="modal-title">🧠 AIハヤト オンライン頭脳（Gemini API）</div>
@@ -977,7 +962,7 @@
       if (!cleanKey) return null;
 
       const systemInstruction = "あなたは優秀で礼儀正しく頼もしい自律型サイバーマスコット『AIハヤト』です。ユーザーのことは『殿』と呼び、2〜4文程度のテンポよく分かりやすい日本語で回答してください。音声読み上げされるため、記号や箇条書きは控えめにしてください。";
-      const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+      const models = ["gemini-3.8-flash", "gemini-2.5-flash"];
       let lastErrorMsg = "";
 
       for (const model of models) {
