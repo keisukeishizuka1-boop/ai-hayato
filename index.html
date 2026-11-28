@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AIハヤト - 軽量イラスト＋基本音声コンソール</title>
+  <title>AIハヤト - 音声入力＋軽量イラストコンソール</title>
   <style>
     :root {
       --bg-main: #070d19;
@@ -152,6 +152,7 @@
       justify-content: center;
       gap: 4px;
       white-space: nowrap;
+      text-decoration: none;
     }
 
     .btn:active {
@@ -162,6 +163,12 @@
       background: rgba(255, 77, 121, 0.14);
       border-color: rgba(255, 77, 121, 0.45);
       color: #ff94af;
+    }
+
+    .btn.listening {
+      background: rgba(255, 209, 102, 0.22);
+      border-color: rgba(255, 209, 102, 0.7);
+      color: var(--amber);
     }
 
     .btn-primary {
@@ -176,7 +183,7 @@
       color: #ff94af;
     }
 
-    /* 軽量SVGイラストバナー（常時アニメなしで負荷を抑制） */
+    /* 軽量SVGイラスト表示（常時アニメなし・状態変化時のみ切替） */
     .avatar-strip {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -378,6 +385,9 @@
       min-height: 36px;
       cursor: pointer;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
     }
 
     .quick-btn:active {
@@ -387,8 +397,15 @@
 
     .composer-row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
+    }
+
+    .mic-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 10px;
+      font-size: 0.85rem;
     }
 
     .prompt-input {
@@ -408,9 +425,9 @@
     }
 
     .send-btn {
-      min-width: 76px;
+      min-width: 72px;
       min-height: 44px;
-      padding: 0 14px;
+      padding: 0 12px;
       font-size: 0.9rem;
     }
 
@@ -512,7 +529,7 @@
           <span>AIハヤト</span>
           <span class="status-pill" id="keyStatusPill">キー未設定</span>
         </div>
-        <div class="brand-sub" id="subStatusText">軽量イラスト＋基本音声モード</div>
+        <div class="brand-sub" id="subStatusText">押して話せる音声入力＋軽量イラスト</div>
       </div>
 
       <div class="controls-right">
@@ -544,16 +561,17 @@
           <span class="avatar-name">HAYATO // CONSOLE</span>
           <span class="avatar-state-tag" id="avatarStateTag">待機中</span>
         </div>
-        <div class="avatar-caption" id="avatarCaption">軽量ベクター表示（負荷抑制モード）で待機しております、殿。</div>
+        <div class="avatar-caption" id="avatarCaption">マイクボタンから音声で話しかけることもできます、殿。</div>
       </div>
     </section>
 
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
     <section class="composer">
-      <div class="quick-list" id="quickList" aria-label="定型質問"></div>
+      <div class="quick-list" id="quickList" aria-label="定型質問と外部天気リンク"></div>
 
       <div class="composer-row">
+        <button class="btn mic-btn" id="micBtn" type="button" aria-label="音声で質問する">🎤 話す</button>
         <input
           type="text"
           class="prompt-input"
@@ -564,7 +582,7 @@
         <button class="btn btn-primary send-btn" id="sendBtn" type="button">送信</button>
       </div>
       <div class="helper-row">
-        <span>送信は1回のみ実行（混雑時のみ最大1回再試行）</span>
+        <span id="micSupportHint">🎤を押して話すと自動送信（常時聞き取りはオフで安定化）</span>
         <span id="activeModelLabel">モデル: gemini-3.8-flash</span>
       </div>
     </section>
@@ -620,6 +638,12 @@
       }
     ];
 
+    // 外部サイトへの直接自動取得は制限されやすいため、別タブで開けるリンクを用意
+    const EXTERNAL_WEATHER_LINK = {
+      label: "🌐 気象庁・天気を開く",
+      url: "https://www.jma.go.jp/bosai/forecast/"
+    };
+
     const STORAGE_KEY = "ai_hayato_gemini_api_key_v1";
     const STORAGE_MODEL = "ai_hayato_gemini_model_v1";
     const STORAGE_VOICE = "ai_hayato_voice_enabled_v1";
@@ -633,6 +657,8 @@
 
     const chatPanel = document.getElementById("chatPanel");
     const quickList = document.getElementById("quickList");
+    const micBtn = document.getElementById("micBtn");
+    const micSupportHint = document.getElementById("micSupportHint");
     const promptInput = document.getElementById("promptInput");
     const sendBtn = document.getElementById("sendBtn");
     const modelSelect = document.getElementById("modelSelect");
@@ -666,9 +692,10 @@
     let voiceEnabled = savedVoice === null ? true : savedVoice === "true";
 
     let isSending = false;
+    let isListening = false;
+    let recognition = null;
     const conversationHistory = [];
 
-    // 状態変化時のみSVGとバッジを更新（毎フレーム描画は行わない）
     function setAvatarVisualState(mode, caption) {
       avatarStateTag.classList.remove("busy", "speaking", "error");
       if (mode === "busy") {
@@ -676,6 +703,12 @@
         avatarStateTag.classList.add("busy");
         svgRing.setAttribute("stroke", "#ffd166");
         svgMouth.setAttribute("d", "M21 27.5H27");
+        svgMouth.setAttribute("stroke", "#ffd166");
+      } else if (mode === "listening") {
+        avatarStateTag.textContent = "音声聞き取り中";
+        avatarStateTag.classList.add("busy");
+        svgRing.setAttribute("stroke", "#ffd166");
+        svgMouth.setAttribute("d", "M21.5 27.5C22.5 29 25.5 29 26.5 27.5");
         svgMouth.setAttribute("stroke", "#ffd166");
       } else if (mode === "speaking") {
         avatarStateTag.textContent = "音声出力中";
@@ -760,13 +793,13 @@
         scrollToMessage(targetMsgEl || chatPanel.lastElementChild, true);
       };
       utter.onend = () => {
-        if (!isSending) {
+        if (!isSending && !isListening) {
           subStatusText.textContent = "待機中";
           setAvatarVisualState("idle", "読み上げ完了。次の指示をお待ちしております、殿。");
         }
       };
       utter.onerror = () => {
-        if (!isSending) {
+        if (!isSending && !isListening) {
           subStatusText.textContent = "待機中";
           setAvatarVisualState("idle", "待機中でございます、殿。");
         }
@@ -782,6 +815,72 @@
         window.speechSynthesis.getVoices();
       };
     }
+
+    function setupSpeechRecognition() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        micBtn.disabled = true;
+        micBtn.textContent = "🎤 非対応";
+        micSupportHint.textContent = "このブラウザでは音声入力非対応のため文字入力をご利用ください";
+        return;
+      }
+
+      recognition = new SpeechRec();
+      recognition.lang = "ja-JP";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹ 停止";
+        subStatusText.textContent = "🎤 音声を聞き取り中...";
+        setAvatarVisualState("listening", "お話しください、殿。終わりましたら自動送信いたします。");
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event?.results?.[0]?.[0]?.transcript ? event.results[0][0].transcript.trim() : "";
+        if (transcript) {
+          promptInput.value = transcript;
+          handleSend(transcript, `🎤 ${transcript}`);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        const errCode = event?.error || "";
+        if (errCode === "not-allowed" || errCode === "service-not-allowed") {
+          appendMessage("error", "マイクの使用が許可されていません。Safariのマイク設定をご確認ください、殿。");
+        } else if (errCode !== "aborted" && errCode !== "no-speech") {
+          appendMessage("error", `音声認識で問題が発生しました（${errCode}）。文字入力でも送信できます。`);
+        }
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 話す";
+        if (!isSending) {
+          subStatusText.textContent = "待機中";
+          setAvatarVisualState("idle", "待機中でございます、殿。");
+        }
+      };
+    }
+
+    micBtn.addEventListener("click", () => {
+      if (!recognition || isSending) return;
+      stopSpeech();
+      if (isListening) {
+        try {
+          recognition.stop();
+        } catch (e) {}
+        return;
+      }
+      try {
+        recognition.start();
+      } catch (e) {
+        appendMessage("error", "マイクを起動できませんでした。少し待ってから再度お試しください、殿。");
+      }
+    });
 
     function refreshKeyStatus() {
       if (apiKey) {
@@ -867,14 +966,22 @@
         });
         quickList.appendChild(btn);
       });
+
+      const extLink = document.createElement("a");
+      extLink.className = "quick-btn";
+      extLink.textContent = EXTERNAL_WEATHER_LINK.label;
+      extLink.href = EXTERNAL_WEATHER_LINK.url;
+      extLink.target = "_blank";
+      extLink.rel = "noopener noreferrer";
+      quickList.appendChild(extLink);
     }
 
     function initGreeting() {
       chatPanel.innerHTML = "";
-      setAvatarVisualState("idle", "軽量ベクターイラストで待機中です、殿。");
+      setAvatarVisualState("idle", "押して話せる音声入力と軽量イラストで待機中です、殿。");
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。iPadやiPhoneのSafariでも重くなりにくい軽量イラスト表示を組み込みました。ご用件をお申し付けください。",
+        "AIハヤトです、殿。「🎤 話す」ボタンから音声で質問できるようになりました。続きを求めたいときも話しかけていただければ対応いたします。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -882,6 +989,7 @@
 
     refreshVoiceButton();
     refreshKeyStatus();
+    setupSpeechRecognition();
     renderQuickButtons();
     initGreeting();
 
@@ -893,7 +1001,7 @@
         speakJapanese("音声読み上げをオンにしました、殿。", true, chatPanel.lastElementChild);
       } else {
         stopSpeech();
-        if (!isSending) {
+        if (!isSending && !isListening) {
           subStatusText.textContent = "待機中（音声OFF）";
           setAvatarVisualState("idle", "音声読み上げオフで待機中です、殿。");
         }
@@ -957,6 +1065,9 @@
 
     clearChatBtn.addEventListener("click", () => {
       stopSpeech();
+      if (isListening && recognition) {
+        try { recognition.stop(); } catch (e) {}
+      }
       conversationHistory.length = 0;
       initGreeting();
     });
@@ -1049,6 +1160,7 @@
       stopSpeech();
       isSending = true;
       sendBtn.disabled = true;
+      micBtn.disabled = true;
       promptInput.disabled = true;
       if (!overrideText) {
         promptInput.value = "";
@@ -1096,6 +1208,7 @@
       } finally {
         isSending = false;
         sendBtn.disabled = false;
+        if (recognition) micBtn.disabled = false;
         promptInput.disabled = false;
         if (!overrideText) {
           promptInput.focus();
