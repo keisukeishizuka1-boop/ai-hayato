@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AIハヤト - 音声入力＋軽量イラストコンソール</title>
+  <title>AIハヤト - ハイパーリンク＆音声入力コンソール</title>
   <style>
     :root {
       --bg-main: #070d19;
@@ -263,10 +263,51 @@
       text-overflow: ellipsis;
     }
 
+    /* 直接飛べる外部リンクバー（ハイパーリンク） */
+    .hyperlink-bar {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 170, 0.35);
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hyperlink-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-right: 2px;
+    }
+
+    .hyperlink-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 12px;
+      min-height: 36px;
+      border-radius: 10px;
+      background: rgba(0, 255, 170, 0.12);
+      border: 1px solid rgba(0, 255, 170, 0.48);
+      color: #e6fff6;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+
+    .hyperlink-btn:active {
+      background: rgba(0, 255, 170, 0.25);
+      transform: scale(0.97);
+    }
+
     /* チャット表示エリア */
     .chat-panel {
       flex: 1;
-      min-height: 150px;
+      min-height: 140px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -349,7 +390,7 @@
       color: var(--red);
     }
 
-    /* 定型質問＋リンクエリア */
+    /* 定型質問＋入力エリア */
     .composer {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -385,15 +426,6 @@
       min-height: 36px;
       cursor: pointer;
       white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      text-decoration: none;
-    }
-
-    .quick-btn.ext-link {
-      background: rgba(0, 255, 170, 0.09);
-      border-color: rgba(0, 255, 170, 0.42);
-      color: #d6fff0;
     }
 
     .quick-btn:active {
@@ -535,7 +567,7 @@
           <span>AIハヤト</span>
           <span class="status-pill" id="keyStatusPill">キー未設定</span>
         </div>
-        <div class="brand-sub" id="subStatusText">押して話せる音声入力＋軽量イラスト</div>
+        <div class="brand-sub" id="subStatusText">押して話せる音声入力＋直接リンク</div>
       </div>
 
       <div class="controls-right">
@@ -567,14 +599,25 @@
           <span class="avatar-name">HAYATO // CONSOLE</span>
           <span class="avatar-state-tag" id="avatarStateTag">待機中</span>
         </div>
-        <div class="avatar-caption" id="avatarCaption">天気・鉄道リンクと音声入力をご利用いただけます、殿。</div>
+        <div class="avatar-caption" id="avatarCaption">リンクをタップすると外部サイトへ直接移動できます、殿。</div>
       </div>
     </section>
+
+    <!-- 直接タップで外部サイトへ飛べるハイパーリンク欄 -->
+    <nav class="hyperlink-bar" aria-label="外部サイト直接リンク">
+      <span class="hyperlink-label">外部リンク:</span>
+      <a class="hyperlink-btn" href="https://www.jma.go.jp/bosai/forecast/" target="_blank" rel="noopener noreferrer">
+        🌐 気象庁・天気を開く ↗
+      </a>
+      <a class="hyperlink-btn" href="https://transit.yahoo.co.jp/traininfo" target="_blank" rel="noopener noreferrer">
+        🚆 鉄道運行状況 ↗
+      </a>
+    </nav>
 
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
     <section class="composer">
-      <div class="quick-list" id="quickList" aria-label="定型質問と外部リンク"></div>
+      <div class="quick-list" id="quickList" aria-label="定型質問"></div>
 
       <div class="composer-row">
         <button class="btn mic-btn" id="micBtn" type="button" aria-label="音声で質問する">🎤 話す</button>
@@ -588,7 +631,7 @@
         <button class="btn btn-primary send-btn" id="sendBtn" type="button">送信</button>
       </div>
       <div class="helper-row">
-        <span id="micSupportHint">🎤を押して話すと自動送信（常時聞き取りはオフで安定化）</span>
+        <span id="micSupportHint">🎤を押して話すと自動送信（終了後はマイク停止）</span>
         <span id="activeModelLabel">モデル: gemini-3.8-flash</span>
       </div>
     </section>
@@ -617,7 +660,6 @@
   </div>
 
   <script>
-    // 定型質問ボタン（『明日の天気』の固定質問は削除済み）
     const QUICK_PROMPTS = [
       {
         label: "🕒 現在時間",
@@ -638,18 +680,6 @@
       {
         label: "☕ 気分転換",
         prompt: "少し頭を休めたいときに短時間でリフレッシュできる工夫を教えてください。"
-      }
-    ];
-
-    // 外部サイトへのリンクボタン（必要に応じてURLを書き換え可能）
-    const EXTERNAL_LINKS = [
-      {
-        label: "🌐 気象庁・天気を開く",
-        url: "https://www.jma.go.jp/bosai/forecast/"
-      },
-      {
-        label: "🚆 鉄道運行状況",
-        url: "https://transit.yahoo.co.jp/traininfo"
       }
     ];
 
@@ -775,6 +805,20 @@
       }
     }
 
+    function releaseMicrophone(useAbort = false) {
+      isListening = false;
+      micBtn.classList.remove("listening");
+      micBtn.textContent = "🎤 話す";
+      if (!recognition) return;
+      try {
+        if (useAbort && typeof recognition.abort === "function") {
+          recognition.abort();
+        } else if (typeof recognition.stop === "function") {
+          recognition.stop();
+        }
+      } catch (e) {}
+    }
+
     function speakJapanese(text, force = false, targetMsgEl = null) {
       if (!("speechSynthesis" in window)) return;
       if (!force && !voiceEnabled) return;
@@ -844,11 +888,12 @@
         micBtn.classList.add("listening");
         micBtn.textContent = "⏹ 停止";
         subStatusText.textContent = "🎤 音声を聞き取り中...";
-        setAvatarVisualState("listening", "お話しください、殿。終わりましたら自動送信いたします。");
+        setAvatarVisualState("listening", "お話しください、殿。終わりましたらマイクを停止し自動送信します。");
       };
 
       recognition.onresult = (event) => {
         const transcript = event?.results?.[0]?.[0]?.transcript ? event.results[0][0].transcript.trim() : "";
+        releaseMicrophone(true);
         if (transcript) {
           promptInput.value = transcript;
           handleSend(transcript, `🎤 ${transcript}`);
@@ -857,17 +902,20 @@
 
       recognition.onerror = (event) => {
         const errCode = event?.error || "";
+        releaseMicrophone(true);
         if (errCode === "not-allowed" || errCode === "service-not-allowed") {
           appendMessage("error", "マイクの使用が許可されていません。Safariのマイク設定をご確認ください、殿。");
         } else if (errCode !== "aborted" && errCode !== "no-speech") {
           appendMessage("error", `音声認識で問題が発生しました（${errCode}）。文字入力でも送信できます。`);
         }
+        if (!isSending) {
+          subStatusText.textContent = "待機中";
+          setAvatarVisualState("idle", "待機中でございます、殿。");
+        }
       };
 
       recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove("listening");
-        micBtn.textContent = "🎤 話す";
+        releaseMicrophone(false);
         if (!isSending) {
           subStatusText.textContent = "待機中";
           setAvatarVisualState("idle", "待機中でございます、殿。");
@@ -879,14 +927,17 @@
       if (!recognition || isSending) return;
       stopSpeech();
       if (isListening) {
-        try {
-          recognition.stop();
-        } catch (e) {}
+        releaseMicrophone(true);
+        if (!isSending) {
+          subStatusText.textContent = "待機中";
+          setAvatarVisualState("idle", "マイクを停止しました、殿。");
+        }
         return;
       }
       try {
         recognition.start();
       } catch (e) {
+        releaseMicrophone(true);
         appendMessage("error", "マイクを起動できませんでした。少し待ってから再度お試しください、殿。");
       }
     });
@@ -964,17 +1015,6 @@
 
     function renderQuickButtons() {
       quickList.innerHTML = "";
-
-      EXTERNAL_LINKS.forEach((linkItem) => {
-        const extLink = document.createElement("a");
-        extLink.className = "quick-btn ext-link";
-        extLink.textContent = linkItem.label;
-        extLink.href = linkItem.url;
-        extLink.target = "_blank";
-        extLink.rel = "noopener noreferrer";
-        quickList.appendChild(extLink);
-      });
-
       QUICK_PROMPTS.forEach((item) => {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -990,10 +1030,10 @@
 
     function initGreeting() {
       chatPanel.innerHTML = "";
-      setAvatarVisualState("idle", "天気・鉄道リンクと音声入力をご利用いただけます、殿。");
+      setAvatarVisualState("idle", "上部のリンクをタップすると外部サイトへ直接移動できます、殿。");
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。「明日の天気」の固定質問を外し、「気象庁・天気を開く」と「鉄道運行状況」のリンクボタンを組み込みました。ご用件をお申し付けください。",
+        "AIハヤトです、殿。「気象庁・天気を開く」と「鉄道運行状況」を直接タップで飛べるハイパーリンクとして配置いたしました。マイク終了後は音声認識を切るようにしております。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -1071,17 +1111,22 @@
       refreshKeyStatus();
       keyModal.classList.remove("open");
       stopSpeech();
+      releaseMicrophone(true);
       setAvatarVisualState("idle", "APIキーを削除しました。再設定をお待ちしております。");
       appendMessage("hayato", "保存されていたAPIキーを削除しました。再び接続される際は「API設定」からご入力ください。");
     });
 
     clearChatBtn.addEventListener("click", () => {
       stopSpeech();
-      if (isListening && recognition) {
-        try { recognition.stop(); } catch (e) {}
-      }
+      releaseMicrophone(true);
       conversationHistory.length = 0;
       initGreeting();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && isListening) {
+        releaseMicrophone(true);
+      }
     });
 
     function formatFriendlyError(rawMessage, statusCode) {
@@ -1170,6 +1215,7 @@
       }
 
       stopSpeech();
+      releaseMicrophone(true);
       isSending = true;
       sendBtn.disabled = true;
       micBtn.disabled = true;
