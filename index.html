@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AIハヤト - 基本音声＋定型質問コンソール</title>
+  <title>AIハヤト - 軽量イラスト＋基本音声コンソール</title>
   <style>
     :root {
       --bg-main: #070d19;
@@ -176,10 +176,90 @@
       color: #ff94af;
     }
 
+    /* 軽量SVGイラストバナー（常時アニメなしで負荷を抑制） */
+    .avatar-strip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar-svg-box {
+      width: 54px;
+      height: 54px;
+      flex: 0 0 54px;
+      border-radius: 12px;
+      background: var(--bg-sub);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .avatar-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .avatar-name {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .avatar-state-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+    }
+
+    .avatar-state-tag.busy {
+      background: rgba(255, 209, 102, 0.16);
+      color: var(--amber);
+      border-color: rgba(255, 209, 102, 0.45);
+    }
+
+    .avatar-state-tag.speaking {
+      background: rgba(0, 255, 170, 0.16);
+      color: var(--green);
+      border-color: rgba(0, 255, 170, 0.45);
+    }
+
+    .avatar-state-tag.error {
+      background: rgba(255, 77, 121, 0.16);
+      color: #ff94af;
+      border-color: rgba(255, 77, 121, 0.45);
+    }
+
+    .avatar-caption {
+      font-size: 0.74rem;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* チャット表示エリア */
     .chat-panel {
       flex: 1;
-      min-height: 160px;
+      min-height: 150px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -432,7 +512,7 @@
           <span>AIハヤト</span>
           <span class="status-pill" id="keyStatusPill">キー未設定</span>
         </div>
-        <div class="brand-sub" id="subStatusText">基本音声＋定型質問モード</div>
+        <div class="brand-sub" id="subStatusText">軽量イラスト＋基本音声モード</div>
       </div>
 
       <div class="controls-right">
@@ -445,6 +525,28 @@
         <button class="btn" id="clearChatBtn" type="button">履歴消去</button>
       </div>
     </header>
+
+    <!-- 軽量SVGイラスト表示（常時アニメなし・状態変化時のみ切替） -->
+    <section class="avatar-strip" aria-label="AIハヤト状態表示">
+      <div class="avatar-svg-box">
+        <svg id="hayatoSvg" width="46" height="46" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AIハヤトのアイコン">
+          <circle id="svgRing" cx="24" cy="24" r="21" stroke="#00f0ff" stroke-width="2" />
+          <path d="M12 20C12 13.5 17.2 9 24 9C30.8 9 36 13.5 36 20L34.5 23C34 16.5 29.8 13 24 13C18.2 13 14 16.5 13.5 23L12 20Z" fill="#eef7ff" />
+          <path d="M14 21C14 27.5 18.4 32.5 24 32.5C29.6 32.5 34 27.5 34 21" stroke="#eef7ff" stroke-width="2.2" stroke-linecap="round" />
+          <line x1="16.5" y1="20.5" x2="21.5" y2="20.5" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round" />
+          <line x1="26.5" y1="20.5" x2="31.5" y2="20.5" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round" />
+          <path id="svgMouth" d="M20.5 27.5H27.5" stroke="#eef7ff" stroke-width="2" stroke-linecap="round" />
+          <path d="M11 41C13 36.5 18 34.5 24 34.5C30 34.5 35 36.5 37 41" fill="#182c4f" stroke="#00f0ff" stroke-width="1.6" />
+        </svg>
+      </div>
+      <div class="avatar-info">
+        <div class="avatar-name-row">
+          <span class="avatar-name">HAYATO // CONSOLE</span>
+          <span class="avatar-state-tag" id="avatarStateTag">待機中</span>
+        </div>
+        <div class="avatar-caption" id="avatarCaption">軽量ベクター表示（負荷抑制モード）で待機しております、殿。</div>
+      </div>
+    </section>
 
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
@@ -540,6 +642,11 @@
     const subStatusText = document.getElementById("subStatusText");
     const clearChatBtn = document.getElementById("clearChatBtn");
 
+    const avatarStateTag = document.getElementById("avatarStateTag");
+    const avatarCaption = document.getElementById("avatarCaption");
+    const svgRing = document.getElementById("svgRing");
+    const svgMouth = document.getElementById("svgMouth");
+
     const keyModal = document.getElementById("keyModal");
     const openKeyModalBtn = document.getElementById("openKeyModalBtn");
     const closeKeyModalBtn = document.getElementById("closeKeyModalBtn");
@@ -560,6 +667,38 @@
 
     let isSending = false;
     const conversationHistory = [];
+
+    // 状態変化時のみSVGとバッジを更新（毎フレーム描画は行わない）
+    function setAvatarVisualState(mode, caption) {
+      avatarStateTag.classList.remove("busy", "speaking", "error");
+      if (mode === "busy") {
+        avatarStateTag.textContent = "応答確認中";
+        avatarStateTag.classList.add("busy");
+        svgRing.setAttribute("stroke", "#ffd166");
+        svgMouth.setAttribute("d", "M21 27.5H27");
+        svgMouth.setAttribute("stroke", "#ffd166");
+      } else if (mode === "speaking") {
+        avatarStateTag.textContent = "音声出力中";
+        avatarStateTag.classList.add("speaking");
+        svgRing.setAttribute("stroke", "#00ffaa");
+        svgMouth.setAttribute("d", "M20.5 27C22 29.5 26 29.5 27.5 27");
+        svgMouth.setAttribute("stroke", "#00ffaa");
+      } else if (mode === "error") {
+        avatarStateTag.textContent = "要確認";
+        avatarStateTag.classList.add("error");
+        svgRing.setAttribute("stroke", "#ff4d79");
+        svgMouth.setAttribute("d", "M20.5 28.5C22 26.8 26 26.8 27.5 28.5");
+        svgMouth.setAttribute("stroke", "#ff94af");
+      } else {
+        avatarStateTag.textContent = "待機中";
+        svgRing.setAttribute("stroke", "#00f0ff");
+        svgMouth.setAttribute("d", "M20.5 27.5H27.5");
+        svgMouth.setAttribute("stroke", "#eef7ff");
+      }
+      if (caption) {
+        avatarCaption.textContent = caption;
+      }
+    }
 
     function scrollToMessage(targetEl, smooth = true) {
       if (!targetEl || !chatPanel) return;
@@ -617,14 +756,20 @@
 
       utter.onstart = () => {
         subStatusText.textContent = "🔊 読み上げ中...";
-        // 音声出力開始時に該当メッセージまたはチャット末尾へ自動スクロール
+        setAvatarVisualState("speaking", "ご返答を読み上げております、殿。");
         scrollToMessage(targetMsgEl || chatPanel.lastElementChild, true);
       };
       utter.onend = () => {
-        if (!isSending) subStatusText.textContent = "待機中";
+        if (!isSending) {
+          subStatusText.textContent = "待機中";
+          setAvatarVisualState("idle", "読み上げ完了。次の指示をお待ちしております、殿。");
+        }
       };
       utter.onerror = () => {
-        if (!isSending) subStatusText.textContent = "待機中";
+        if (!isSending) {
+          subStatusText.textContent = "待機中";
+          setAvatarVisualState("idle", "待機中でございます、殿。");
+        }
       };
 
       try {
@@ -726,9 +871,10 @@
 
     function initGreeting() {
       chatPanel.innerHTML = "";
+      setAvatarVisualState("idle", "軽量ベクターイラストで待機中です、殿。");
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。音声読み上げが始まると画面も自動で追従するよう調整いたしました。ご用件をお申し付けください。",
+        "AIハヤトです、殿。iPadやiPhoneのSafariでも重くなりにくい軽量イラスト表示を組み込みました。ご用件をお申し付けください。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -747,7 +893,10 @@
         speakJapanese("音声読み上げをオンにしました、殿。", true, chatPanel.lastElementChild);
       } else {
         stopSpeech();
-        if (!isSending) subStatusText.textContent = "待機中（音声OFF）";
+        if (!isSending) {
+          subStatusText.textContent = "待機中（音声OFF）";
+          setAvatarVisualState("idle", "音声読み上げオフで待機中です、殿。");
+        }
       }
     });
 
@@ -780,6 +929,7 @@
       const entered = keyInput.value.trim();
       if (!entered && !apiKey) {
         appendMessage("error", "APIキーが入力されていません。有効なキーを入力してから保存してください。");
+        setAvatarVisualState("error", "APIキー未入力のため保存できませんでした。");
         return;
       }
       if (entered) {
@@ -801,6 +951,7 @@
       refreshKeyStatus();
       keyModal.classList.remove("open");
       stopSpeech();
+      setAvatarVisualState("idle", "APIキーを削除しました。再設定をお待ちしております。");
       appendMessage("hayato", "保存されていたAPIキーを削除しました。再び接続される際は「API設定」からご入力ください。");
     });
 
@@ -872,6 +1023,7 @@
 
         if (isTransientServerBusy) {
           subStatusText.textContent = "サーバー混雑のため1回のみ再試行中...";
+          setAvatarVisualState("busy", "サーバー混雑のため1回だけ再試行中です、殿。");
           thinkingBodyEl.textContent = "サーバーが混み合っております。1回だけ再試行いたします、殿...";
           await new Promise((r) => setTimeout(r, 1200));
           return await callGeminiOnce(model, contents);
@@ -890,6 +1042,7 @@
           "error",
           "APIキーが設定されていません。右上の「API設定」からGemini APIキーを保存してから送信してください、殿。"
         );
+        setAvatarVisualState("error", "APIキーが未設定です。右上のAPI設定をご確認ください。");
         return;
       }
 
@@ -901,6 +1054,7 @@
         promptInput.value = "";
       }
       subStatusText.textContent = `${selectedModel} に送信中...`;
+      setAvatarVisualState("busy", `${selectedModel} へ照会中です、殿。`);
 
       appendMessage("user", displayLabel ? `${displayLabel}（${getCurrentTimeLabel()}）` : userText);
       const thinkingBody = appendMessage("hayato", "確認中です、少々お待ちください...", `AIハヤト (${selectedModel})`);
@@ -932,11 +1086,13 @@
           { role: "model", parts: [{ text: replyText }] }
         );
         subStatusText.textContent = "待機中";
+        setAvatarVisualState("idle", "ご返答を表示いたしました、殿。");
         speakJapanese(replyText, false, replyBoxEl);
       } catch (err) {
         replyBoxEl.remove();
         appendMessage("error", formatFriendlyError(err?.message, err?.status));
         subStatusText.textContent = "エラー確認";
+        setAvatarVisualState("error", "通信またはモデル応答に問題が発生しました。");
       } finally {
         isSending = false;
         sendBtn.disabled = false;
