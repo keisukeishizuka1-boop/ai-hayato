@@ -349,7 +349,7 @@
       color: var(--red);
     }
 
-    /* 定型質問＋入力エリア */
+    /* 定型質問＋リンクエリア */
     .composer {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -388,6 +388,12 @@
       display: inline-flex;
       align-items: center;
       text-decoration: none;
+    }
+
+    .quick-btn.ext-link {
+      background: rgba(0, 255, 170, 0.09);
+      border-color: rgba(0, 255, 170, 0.42);
+      color: #d6fff0;
     }
 
     .quick-btn:active {
@@ -561,14 +567,14 @@
           <span class="avatar-name">HAYATO // CONSOLE</span>
           <span class="avatar-state-tag" id="avatarStateTag">待機中</span>
         </div>
-        <div class="avatar-caption" id="avatarCaption">マイクボタンから音声で話しかけることもできます、殿。</div>
+        <div class="avatar-caption" id="avatarCaption">天気・鉄道リンクと音声入力をご利用いただけます、殿。</div>
       </div>
     </section>
 
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
     <section class="composer">
-      <div class="quick-list" id="quickList" aria-label="定型質問と外部天気リンク"></div>
+      <div class="quick-list" id="quickList" aria-label="定型質問と外部リンク"></div>
 
       <div class="composer-row">
         <button class="btn mic-btn" id="micBtn" type="button" aria-label="音声で質問する">🎤 話す</button>
@@ -611,11 +617,8 @@
   </div>
 
   <script>
+    // 定型質問ボタン（『明日の天気』の固定質問は削除済み）
     const QUICK_PROMPTS = [
-      {
-        label: "🌤️ 明日の天気",
-        prompt: "明日の天気について、リアルタイムの気象情報が参照できない前提を踏まえつつ、外出や予定を組む際に確認すべきポイントと先回りの助言を教えてください。"
-      },
       {
         label: "🕒 現在時間",
         prompt: "現在の日時や時間帯を意識したうえで、今の時間帯に無理なく進めるべき行動や段取りを簡潔に教えてください。"
@@ -638,11 +641,17 @@
       }
     ];
 
-    // 外部サイトへの直接自動取得は制限されやすいため、別タブで開けるリンクを用意
-    const EXTERNAL_WEATHER_LINK = {
-      label: "🌐 気象庁・天気を開く",
-      url: "https://www.jma.go.jp/bosai/forecast/"
-    };
+    // 外部サイトへのリンクボタン（必要に応じてURLを書き換え可能）
+    const EXTERNAL_LINKS = [
+      {
+        label: "🌐 気象庁・天気を開く",
+        url: "https://www.jma.go.jp/bosai/forecast/"
+      },
+      {
+        label: "🚆 鉄道運行状況",
+        url: "https://transit.yahoo.co.jp/traininfo"
+      }
+    ];
 
     const STORAGE_KEY = "ai_hayato_gemini_api_key_v1";
     const STORAGE_MODEL = "ai_hayato_gemini_model_v1";
@@ -955,6 +964,17 @@
 
     function renderQuickButtons() {
       quickList.innerHTML = "";
+
+      EXTERNAL_LINKS.forEach((linkItem) => {
+        const extLink = document.createElement("a");
+        extLink.className = "quick-btn ext-link";
+        extLink.textContent = linkItem.label;
+        extLink.href = linkItem.url;
+        extLink.target = "_blank";
+        extLink.rel = "noopener noreferrer";
+        quickList.appendChild(extLink);
+      });
+
       QUICK_PROMPTS.forEach((item) => {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -966,22 +986,14 @@
         });
         quickList.appendChild(btn);
       });
-
-      const extLink = document.createElement("a");
-      extLink.className = "quick-btn";
-      extLink.textContent = EXTERNAL_WEATHER_LINK.label;
-      extLink.href = EXTERNAL_WEATHER_LINK.url;
-      extLink.target = "_blank";
-      extLink.rel = "noopener noreferrer";
-      quickList.appendChild(extLink);
     }
 
     function initGreeting() {
       chatPanel.innerHTML = "";
-      setAvatarVisualState("idle", "押して話せる音声入力と軽量イラストで待機中です、殿。");
+      setAvatarVisualState("idle", "天気・鉄道リンクと音声入力をご利用いただけます、殿。");
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。「🎤 話す」ボタンから音声で質問できるようになりました。続きを求めたいときも話しかけていただければ対応いたします。",
+        "AIハヤトです、殿。「明日の天気」の固定質問を外し、「気象庁・天気を開く」と「鉄道運行状況」のリンクボタンを組み込みました。ご用件をお申し付けください。",
         "AIハヤト",
         { allowSpeak: false }
       );
