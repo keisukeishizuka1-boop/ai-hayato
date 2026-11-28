@@ -311,8 +311,8 @@
 
     .mascot-wrapper {
       position: relative;
-      width: 220px;
-      height: 220px;
+      width: 224px;
+      height: 224px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -328,8 +328,8 @@
 
     .holo-ring {
       position: absolute;
-      width: 204px;
-      height: 204px;
+      width: 208px;
+      height: 208px;
       border-radius: 50%;
       border: 2px dashed rgba(0, 240, 255, 0.4);
       animation: spinRing 18s linear infinite;
@@ -338,8 +338,8 @@
 
     .holo-ring-inner {
       position: absolute;
-      width: 180px;
-      height: 180px;
+      width: 184px;
+      height: 184px;
       border-radius: 50%;
       border: 1.5px solid rgba(0, 240, 255, 0.25);
       box-shadow: 0 0 24px var(--cyan-glow), inset 0 0 24px var(--cyan-glow);
@@ -368,8 +368,8 @@
     }
 
     .mascot-svg {
-      width: 182px;
-      height: 182px;
+      width: 188px;
+      height: 188px;
       z-index: 2;
       filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
     }
@@ -622,7 +622,7 @@
         <button class="replay-btn" id="replayBtn">🔊 もう一度聞く</button>
       </div>
       <div class="speech-text" id="speechText">
-        おはようございます、殿！AIハヤト、起動完了しました。左右の丸いボタンで「常時音声」と「送信」が使えますよ！
+        おはようございます、殿！気合十分のハヤト、起動完了しました。左右の丸いボタンで「常時音声」と「送信」が使えますよ！
       </div>
     </div>
 
@@ -636,80 +636,129 @@
         <div class="holo-ring"></div>
         <div class="holo-ring-inner"></div>
 
-        <svg class="mascot-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- PSB缶を持った気合ポーズのサイバーマスコットSVG -->
+        <svg class="mascot-svg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#2b3d54" />
-              <stop offset="100%" stop-color="#141e2b" />
+            <linearGradient id="psbHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#4e4f54" />
+              <stop offset="100%" stop-color="#2c2d31" />
             </linearGradient>
-            <linearGradient id="hairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#3a3330" />
-              <stop offset="100%" stop-color="#1c1817" />
+            <linearGradient id="psbSuitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8b9096" />
+              <stop offset="100%" stop-color="#6f747a" />
+            </linearGradient>
+            <linearGradient id="psbCanGold" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#e3b84b" />
+              <stop offset="50%" stop-color="#f8dc7c" />
+              <stop offset="100%" stop-color="#c9982c" />
+            </linearGradient>
+            <linearGradient id="psbTieBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#4ea8de" />
+              <stop offset="100%" stop-color="#277da1" />
             </linearGradient>
           </defs>
 
-          <path d="M 48 182 C 48 144, 68 134, 100 134 C 132 134, 152 144, 152 182 Z" fill="url(#suitGrad)" stroke="#00f0ff" stroke-width="1.5" stroke-opacity="0.5"/>
-          <polygon points="84,135 116,135 100,174" fill="#eef6ff" />
-          <polygon points="82,135 94,148 88,156 76,142" fill="#ffffff" stroke="#cbd8e6" stroke-width="1"/>
-          <polygon points="118,135 106,148 112,156 124,142" fill="#ffffff" stroke="#cbd8e6" stroke-width="1"/>
-          <polygon points="96,142 104,142 106,166 100,173 94,166" fill="#00b8d4" />
-          <polygon points="95,137 105,137 103,143 97,143" fill="#008ba3" />
-          <path d="M 80 135 L 70 162 L 86 166 L 82 175 L 98 182" fill="none" stroke="#101824" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M 120 135 L 130 162 L 114 166 L 118 175 L 102 182" fill="none" stroke="#101824" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- 脚・靴 -->
+          <path d="M 86 168 L 84 196 C 84 200, 102 200, 102 195 L 104 172 Z" fill="url(#psbSuitGrad)" stroke="#1e1e20" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M 116 172 L 118 195 C 118 200, 136 200, 136 196 L 134 168 Z" fill="url(#psbSuitGrad)" stroke="#1e1e20" stroke-width="4" stroke-linejoin="round"/>
+          <ellipse cx="90" cy="198" rx="13" ry="6" fill="#232529" stroke="#1e1e20" stroke-width="3.5"/>
+          <ellipse cx="130" cy="198" rx="13" ry="6" fill="#232529" stroke="#1e1e20" stroke-width="3.5"/>
 
-          <rect x="90" y="120" width="20" height="18" rx="6" fill="#f5cbb0" />
-          <circle cx="53" cy="92" r="9" fill="#f5cbb0" stroke="#231f20" stroke-width="2.5"/>
-          <circle cx="147" cy="92" r="9" fill="#f5cbb0" stroke="#231f20" stroke-width="2.5"/>
+          <!-- グレーのスーツ胴体 -->
+          <path d="M 68 126 C 64 148, 66 168, 76 176 L 144 176 C 154 168, 156 148, 152 126 Z" fill="url(#psbSuitGrad)" stroke="#1e1e20" stroke-width="4.5" stroke-linejoin="round"/>
+          <!-- スーツのボタン -->
+          <circle cx="110" cy="154" r="4.2" fill="#d9dee3" stroke="#1e1e20" stroke-width="2.5"/>
 
-          <path d="M 55 76 C 55 44, 145 44, 145 76 L 143 102 C 141 124, 122 134, 100 134 C 78 134, 59 124, 57 102 Z" fill="#ffe0c8" stroke="#231f20" stroke-width="3"/>
+          <!-- ワイシャツの襟とネクタイ -->
+          <polygon points="94,126 126,126 110,164" fill="#f4f8fb" stroke="#1e1e20" stroke-width="3" stroke-linejoin="round"/>
+          <polygon points="91,126 105,138 99,145 87,132" fill="#ffffff" stroke="#1e1e20" stroke-width="2.8" stroke-linejoin="round"/>
+          <polygon points="129,126 115,138 121,145 133,132" fill="#ffffff" stroke="#1e1e20" stroke-width="2.8" stroke-linejoin="round"/>
+          <polygon points="105,133 115,133 117,156 110,164 103,156" fill="url(#psbTieBlue)" stroke="#1e1e20" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- ネクタイのハイライト -->
+          <line x1="108" y1="138" x2="108" y2="154" stroke="#90e0ef" stroke-width="2" stroke-linecap="round"/>
 
-          <path d="M 52 82 C 48 56, 62 34, 86 30 C 90 25, 104 24, 112 30 C 134 31, 152 50, 148 82 C 144 68, 138 60, 132 56 C 128 64, 122 68, 116 62 C 110 70, 100 72, 92 64 C 84 72, 74 70, 68 60 C 62 66, 56 72, 52 82 Z" fill="url(#hairGrad)" stroke="#1a1615" stroke-width="2.5" stroke-linejoin="round"/>
-          <path d="M 85 42 Q 92 48 98 40" fill="none" stroke="#5a504c" stroke-width="2" stroke-linecap="round"/>
-          <path d="M 106 41 Q 113 48 119 41" fill="none" stroke="#5a504c" stroke-width="2" stroke-linecap="round"/>
+          <!-- 右腕（画面左側のガッツポーズ） -->
+          <path d="M 70 132 C 44 132, 34 118, 42 98" fill="none" stroke="#1e1e20" stroke-width="16" stroke-linecap="round"/>
+          <path d="M 70 132 C 44 132, 34 118, 42 98" fill="none" stroke="url(#psbSuitGrad)" stroke-width="9" stroke-linecap="round"/>
+          <!-- 右手のこぶし -->
+          <g transform="translate(26, 78)">
+            <rect x="4" y="6" width="24" height="22" rx="8" fill="#d5e5dc" stroke="#1e1e20" stroke-width="4"/>
+            <path d="M 10 6 L 10 14 M 16 6 L 16 14 M 22 6 L 22 14" stroke="#1e1e20" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
 
+          <!-- 左腕（画面右側の缶を持つ腕） -->
+          <path d="M 150 132 C 174 134, 182 122, 174 106" fill="none" stroke="#1e1e20" stroke-width="15" stroke-linecap="round"/>
+          <path d="M 150 132 C 174 134, 182 122, 174 106" fill="none" stroke="url(#psbSuitGrad)" stroke-width="8.5" stroke-linecap="round"/>
+
+          <!-- 左手に持つPSB缶 -->
+          <g transform="translate(154, 82)">
+            <!-- 缶の本体 -->
+            <rect x="0" y="0" width="38" height="54" rx="5" fill="url(#psbCanGold)" stroke="#1e1e20" stroke-width="3.5"/>
+            <!-- 缶の上部リム -->
+            <rect x="1" y="-2" width="36" height="5" rx="2" fill="#f7e39c" stroke="#1e1e20" stroke-width="2.5"/>
+            <!-- 缶中央のブラック帯 -->
+            <rect x="2" y="13" width="34" height="24" rx="2" fill="#1b1d21"/>
+            <text x="19" y="29" text-anchor="middle" fill="#f7dc7a" font-size="11.5" font-weight="900" font-family="sans-serif">PSB</text>
+            <text x="19" y="7" text-anchor="middle" fill="#2c2410" font-size="6" font-weight="800" font-family="sans-serif">SUNTORY</text>
+            <!-- 缶を押さえる左手の指 -->
+            <rect x="-5" y="24" width="12" height="16" rx="5" fill="#d5e5dc" stroke="#1e1e20" stroke-width="3.2"/>
+          </g>
+
+          <!-- 耳 -->
+          <path d="M 55 82 C 44 80, 42 98, 55 100" fill="#d5e5dc" stroke="#1e1e20" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M 165 82 C 176 80, 178 98, 165 100" fill="#d5e5dc" stroke="#1e1e20" stroke-width="4" stroke-linejoin="round"/>
+
+          <!-- 輪郭・顔 -->
+          <path d="M 55 72 C 55 34, 165 34, 165 72 L 163 98 C 161 122, 138 132, 110 132 C 82 132, 59 122, 57 98 Z" fill="#d5e5dc" stroke="#1e1e20" stroke-width="4.5" stroke-linejoin="round"/>
+
+          <!-- 前髪・髪全体 -->
+          <path d="M 50 82 C 44 48, 66 20, 102 18 C 110 13, 122 14, 128 20 C 156 24, 176 48, 170 82 C 165 64, 156 54, 146 50 L 142 66 L 132 52 L 122 64 L 112 52 L 96 68 L 88 54 L 74 68 L 66 56 C 58 64, 53 72, 50 82 Z" fill="url(#psbHairGrad)" stroke="#1e1e20" stroke-width="4.2" stroke-linejoin="round"/>
+          <!-- 髪のハイライト線 -->
+          <path d="M 88 32 Q 96 38 104 30" fill="none" stroke="#8a8d94" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 122 28 Q 130 35 138 28" fill="none" stroke="#8a8d94" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- 通常・気合表情 -->
           <g id="expr-normal">
-            <path d="M 68 74 Q 78 68 88 73" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <path d="M 112 73 Q 122 68 132 74" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <path d="M 70 88 Q 79 80 88 88" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M 112 88 Q 121 80 130 88" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M 86 106 Q 100 116 114 106" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
+            <!-- 気合の入った眉 -->
+            <path d="M 70 68 L 96 76" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <path d="M 150 68 L 124 76" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <!-- ぎゅっとした目 -->
+            <path d="M 72 84 Q 84 80 96 84" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 124 84 Q 136 80 148 84" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <!-- 鼻 -->
+            <circle cx="110" cy="91" r="2.2" fill="#1e1e20"/>
+            <!-- 気合の開いた口 -->
+            <path d="M 92 103 Q 110 101 128 103 Q 126 118 110 118 Q 94 118 92 103 Z" fill="#f7f9fa" stroke="#1e1e20" stroke-width="3.6" stroke-linejoin="round"/>
           </g>
 
+          <!-- 発話中表情 -->
           <g id="expr-speak" style="display: none;">
-            <path d="M 68 72 Q 78 66 88 71" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <path d="M 112 71 Q 122 66 132 72" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <ellipse cx="79" cy="87" rx="5.5" ry="6.5" fill="#231f20"/>
-            <circle cx="77" cy="85" r="2" fill="#ffffff"/>
-            <ellipse cx="121" cy="87" rx="5.5" ry="6.5" fill="#231f20"/>
-            <circle cx="119" cy="85" r="2" fill="#ffffff"/>
-            <path d="M 87 104 Q 100 104 113 104 Q 111 120 100 120 Q 89 120 87 104 Z" fill="#d9534f" stroke="#231f20" stroke-width="2.5"/>
-            <path d="M 92 115 Q 100 111 108 115" fill="none" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
+            <path d="M 70 68 L 96 75" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <path d="M 150 68 L 124 75" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <path d="M 72 84 Q 84 78 96 84" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 124 84 Q 136 78 148 84" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="110" cy="91" r="2.2" fill="#1e1e20"/>
+            <ellipse cx="110" cy="110" rx="14" ry="9" fill="#e56b6f" stroke="#1e1e20" stroke-width="3.5"/>
           </g>
 
+          <!-- 解析中表情 -->
           <g id="expr-analyze" style="display: none;">
-            <path d="M 67 74 L 89 76" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <path d="M 111 76 L 133 74" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <rect x="65" y="81" width="28" height="13" rx="3" fill="rgba(0, 240, 255, 0.22)" stroke="#00f0ff" stroke-width="2"/>
-            <rect x="107" y="81" width="28" height="13" rx="3" fill="rgba(0, 240, 255, 0.22)" stroke="#00f0ff" stroke-width="2"/>
-            <line x1="93" y1="87" x2="107" y2="87" stroke="#00f0ff" stroke-width="2"/>
-            <circle cx="79" cy="87.5" r="3.5" fill="#231f20"/>
-            <circle cx="121" cy="87.5" r="3.5" fill="#231f20"/>
-            <path d="M 90 109 Q 102 112 112 106" fill="none" stroke="#231f20" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M 70 70 L 96 74" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 150 70 L 124 74" fill="none" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <rect x="70" y="79" width="30" height="14" rx="4" fill="rgba(0, 240, 255, 0.25)" stroke="#00f0ff" stroke-width="2.5"/>
+            <rect x="120" y="79" width="30" height="14" rx="4" fill="rgba(0, 240, 255, 0.25)" stroke="#00f0ff" stroke-width="2.5"/>
+            <line x1="100" y1="86" x2="120" y2="86" stroke="#00f0ff" stroke-width="2.5"/>
+            <path d="M 96 108 Q 110 113 124 107" fill="none" stroke="#1e1e20" stroke-width="3.5" stroke-linecap="round"/>
           </g>
 
+          <!-- アラート表情 -->
           <g id="expr-alert" style="display: none;">
-            <path d="M 67 70 L 89 78" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M 133 70 L 111 78" fill="none" stroke="#231f20" stroke-width="3.2" stroke-linecap="round"/>
-            <circle cx="79" cy="88" r="6" fill="#231f20"/>
-            <circle cx="77" cy="86" r="2" fill="#ffffff"/>
-            <circle cx="121" cy="88" r="6" fill="#231f20"/>
-            <circle cx="119" cy="86" r="2" fill="#ffffff"/>
-            <path d="M 88 113 Q 100 105 112 113" fill="none" stroke="#231f20" stroke-width="3" stroke-linecap="round"/>
-            <path d="M 137 64 Q 141 72 137 76 Q 133 72 137 64 Z" fill="#4fc3f7" stroke="#0288d1" stroke-width="1.2"/>
+            <path d="M 70 66 L 96 76" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <path d="M 150 66 L 124 76" fill="none" stroke="#1e1e20" stroke-width="4.2" stroke-linecap="round"/>
+            <path d="M 74 84 L 94 84" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 126 84 L 146 84" stroke="#1e1e20" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 94 114 Q 110 104 126 114" fill="none" stroke="#1e1e20" stroke-width="3.6" stroke-linecap="round"/>
           </g>
-
-          <ellipse cx="67" cy="97" rx="6" ry="3.5" fill="#ff9e9e" opacity="0.55"/>
-          <ellipse cx="133" cy="97" rx="6" ry="3.5" fill="#ff9e9e" opacity="0.55"/>
         </svg>
       </div>
 
