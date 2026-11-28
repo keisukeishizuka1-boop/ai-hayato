@@ -499,6 +499,14 @@
     // =========================================================================
     const QUICK_PROMPTS = [
       {
+        label: "🌤️ 明日の天気",
+        prompt: "明日の天気について、リアルタイムの気象情報が参照できない前提を踏まえつつ、外出や予定を組む際に確認すべきポイントと先回りの助言を教えてください。"
+      },
+      {
+        label: "🕒 現在時間",
+        prompt: "現在の日時や時間帯を意識したうえで、今の時間帯に無理なく進めるべき行動や段取りを簡潔に教えてください。"
+      },
+      {
         label: "📋 今日の段取り",
         prompt: "今日を効率よく進めるための段取りと、先回りの優先順位を3つ教えてください。"
       },
@@ -674,6 +682,22 @@
       return body;
     }
 
+    function getCurrentTimeLabel() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const w = ["日", "月", "火", "水", "木", "金", "土"][now.getDay()];
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      return `${y}年${m}月${d}日（${w}）${hh}:${mm}`;
+    }
+
+    function buildPromptWithContext(rawPrompt) {
+      const timeLabel = getCurrentTimeLabel();
+      return `【現在の端末日時】${timeLabel}\n${rawPrompt}`;
+    }
+
     function renderQuickButtons() {
       quickList.innerHTML = "";
       QUICK_PROMPTS.forEach((item) => {
@@ -683,7 +707,7 @@
         btn.textContent = item.label;
         btn.title = item.prompt;
         btn.addEventListener("click", () => {
-          handleSend(item.prompt);
+          handleSend(item.prompt, item.label);
         });
         quickList.appendChild(btn);
       });
@@ -693,7 +717,7 @@
       chatPanel.innerHTML = "";
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。基本の音声読み上げと定型質問ボタンを組み込みました。定型質問はコード内の設定で自由に変更できます。ご用件をお申し付けください。",
+        "AIハヤトです、殿。先頭に「明日の天気」と「現在時間」の定型質問ボタンを追加いたしました。ご用件をお申し付けください。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -845,7 +869,7 @@
       }
     }
 
-    async function handleSend(overrideText = "") {
+    async function handleSend(overrideText = "", displayLabel = "") {
       if (isSending) return;
       const userText = (overrideText || promptInput.value).trim();
       if (!userText) return;
@@ -867,12 +891,13 @@
       }
       subStatusText.textContent = `${selectedModel} に送信中...`;
 
-      appendMessage("user", userText);
+      appendMessage("user", displayLabel ? `${displayLabel}（${getCurrentTimeLabel()}）` : userText);
       const thinkingBody = appendMessage("hayato", "確認中です、少々お待ちください...", `AIハヤト (${selectedModel})`);
 
+      const promptForApi = buildPromptWithContext(userText);
       const nextContents = [
         ...conversationHistory.slice(-8),
-        { role: "user", parts: [{ text: userText }] }
+        { role: "user", parts: [{ text: promptForApi }] }
       ];
 
       try {
@@ -889,7 +914,7 @@
         thinkingBody.parentElement.querySelector(".msg-header").appendChild(speakBtn);
 
         conversationHistory.push(
-          { role: "user", parts: [{ text: userText }] },
+          { role: "user", parts: [{ text: promptForApi }] },
           { role: "model", parts: [{ text: replyText }] }
         );
         subStatusText.textContent = "待機中";
