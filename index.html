@@ -311,8 +311,8 @@
 
     .mascot-wrapper {
       position: relative;
-      width: 196px;
-      height: 196px;
+      width: 220px;
+      height: 220px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -328,8 +328,8 @@
 
     .holo-ring {
       position: absolute;
-      width: 184px;
-      height: 184px;
+      width: 204px;
+      height: 204px;
       border-radius: 50%;
       border: 2px dashed rgba(0, 240, 255, 0.4);
       animation: spinRing 18s linear infinite;
@@ -338,8 +338,8 @@
 
     .holo-ring-inner {
       position: absolute;
-      width: 162px;
-      height: 162px;
+      width: 180px;
+      height: 180px;
       border-radius: 50%;
       border: 1.5px solid rgba(0, 240, 255, 0.25);
       box-shadow: 0 0 24px var(--cyan-glow), inset 0 0 24px var(--cyan-glow);
@@ -368,8 +368,8 @@
     }
 
     .mascot-svg {
-      width: 158px;
-      height: 158px;
+      width: 182px;
+      height: 182px;
       z-index: 2;
       filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
     }
@@ -908,7 +908,7 @@
       utter.onend = () => {
         isSpeaking = false;
         mascotWrapper.classList.remove("speaking");
-        setExpression(speechBubble.classList.contains("alert-mode") ? "alert" : "normal");
+        setExpression("normal");
         if (isContinuousMode) {
           scheduleRestartRecognition(350);
         }
@@ -988,11 +988,6 @@
             if (!res.ok) {
               const apiMsg = data?.error?.message || `HTTP ${res.status}`;
               lastErrorMsg = `${model}: ${apiMsg}`;
-              if ((res.status === 429 || res.status === 503 || /high demand/i.test(apiMsg)) && attempt < 1) {
-                displaySpeech(`AIサーバーが混雑中です。再接続を試みています（${attempt}/1）...`, "[RETRYING...]", "analyze", false, true);
-                await sleep(1200 * attempt);
-                continue;
-              }
               break;
             }
 
@@ -1000,9 +995,6 @@
             if (reply) return { ok: true, text: reply.trim() };
           } catch (err) {
             lastErrorMsg = err?.message || "ネットワーク通信エラー";
-            if (attempt < 1) {
-              await sleep(1000 * attempt);
-            }
           }
         }
       }
@@ -1018,8 +1010,8 @@
         return {
           text: "警告レベルを点検しました！不審なリンクや添付ファイルは絶対に開かず、二段階認証を有効にしてください。私が常に背後で監視しています！",
           tag: "[SECURITY ALERT]",
-          expr: "alert",
-          alert: true
+          expr: "normal",
+          alert: false
         };
       }
 
@@ -1033,7 +1025,7 @@
         return {
           text: `現在は ${y}年${m}月${d}日（${w}曜日）、時刻は ${hh}時${mm}分 です。今日も最高のパフォーマンスを発揮しましょう！`,
           tag: "[TIME & STATUS]",
-          expr: "analyze",
+          expr: "normal",
           alert: false
         };
       }
@@ -1042,7 +1034,7 @@
         return {
           text: "業務効率化の鉄則です！まずは『最初の15分で一番重要な1タスク』だけに集中してください。終わったら私が全力で褒めますよ！",
           tag: "[PRODUCTIVITY]",
-          expr: "analyze",
+          expr: "normal",
           alert: false
         };
       }
@@ -1063,7 +1055,7 @@
       return {
         text: defaults[Math.floor(Math.random() * defaults.length)],
         tag: "[LOCAL RESPONSE]",
-        expr: "analyze",
+        expr: "normal",
         alert: false
       };
     }
@@ -1075,7 +1067,7 @@
       chatInput.value = "";
       interimBuffer = "";
       statusSub.textContent = "思考・データ解析中...";
-      displaySpeech("解析中です、少々お待ちください...", "[ANALYZING...]", "analyze", false, Boolean(geminiApiKey));
+      displaySpeech("解析中です、少々お待ちください...", "[ANALYZING...]", "normal", false, Boolean(geminiApiKey));
 
       if (geminiApiKey) {
         const aiResult = await askGeminiBrain(msg);
@@ -1086,7 +1078,7 @@
         } else if (aiResult && !aiResult.ok) {
           statusSub.textContent = "AI通信エラー確認";
           const errDetail = aiResult.error || "不明なエラー";
-          respond(`AI頭脳との通信でエラーが発生しました（${errDetail}）。右上の「🟢 AI接続中」からキーを再確認してみてください、殿！`, "[⚠️ AI通信エラー]", "alert", true, false);
+          respond(`AI頭脳との通信でエラーが発生しました（${errDetail}）。少し時間を置いて再送するか、右上の「🟢 AI接続中」からキーを再確認してみてください、殿！`, "[⚠️ AI通信エラー]", "normal", false, false);
           return;
         }
       }
@@ -1100,7 +1092,7 @@
 
     const tapLines = [
       { text: "お呼びでしょうか、殿！ハヤト、いつでも動けます！", tag: "[ACTIVE]", expr: "normal", alert: false },
-      { text: "システム異常なし！今日も素晴らしい一日にしましょう！", tag: "[SYSTEM CHECK]", expr: "analyze", alert: false },
+      { text: "システム異常なし！今日も素晴らしい一日にしましょう！", tag: "[SYSTEM CHECK]", expr: "normal", alert: false },
       { text: "左の『常時音声』を押せば、手ぶらでずっとお話しできますよ！", tag: "[VOICE READY]", expr: "normal", alert: false }
     ];
     let tapIndex = 0;
@@ -1180,7 +1172,7 @@
           micStatusBar.classList.add("is-listening");
           micStatusText.textContent = "🗣️ 聞き取り中...（話し終えると自動で送信します）";
         }
-        setExpression("analyze");
+        setExpression("normal");
       };
 
       rec.onresult = (event) => {
@@ -1229,7 +1221,7 @@
             micStatusBar.classList.add("is-fallback");
             micStatusText.textContent = "⚠️ マイク許可が必要です。入力欄のキーボード「🎙️」からも音声入力できます";
           }
-          respond("マイクの使用がブロックされました。ブラウザのマイク許可をオンにするか、キーボードの音声入力ボタンをお使いください、殿！", "[MIC PERMISSION]", "alert", true, false);
+          respond("マイクの使用がブロックされました。ブラウザのマイク許可をオンにするか、キーボードの音声入力ボタンをお使いください、殿！", "[MIC PERMISSION]", "normal", false, false);
           return;
         }
 
@@ -1283,7 +1275,7 @@
           micStatusBar.classList.add("is-fallback");
           micStatusText.textContent = "💡 下の入力欄をタップし、キーボード右下の「🎙️」で音声入力できます";
         }
-        respond("このブラウザでは自動待機マイクが制限されています。下の入力欄をタップして、キーボードのマイクボタンから話しかけてください、殿！", "[KEYBOARD VOICE]", "analyze", false, Boolean(geminiApiKey));
+        respond("このブラウザでは自動待機マイクが制限されています。下の入力欄をタップして、キーボードのマイクボタンから話しかけてください、殿！", "[KEYBOARD VOICE]", "normal", false, Boolean(geminiApiKey));
         chatInput.focus();
         return;
       }
