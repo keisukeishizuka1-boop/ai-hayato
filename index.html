@@ -449,7 +449,6 @@
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
     <section class="composer">
-      <!-- 定型質問ボタン一覧（下のスクリプト内 QUICK_PROMPTS で自由に編集可能） -->
       <div class="quick-list" id="quickList" aria-label="定型質問"></div>
 
       <div class="composer-row">
@@ -492,11 +491,6 @@
   </div>
 
   <script>
-    // =========================================================================
-    // ★ よく使う定型質問ボタンは、ここの配列を書き換えるだけで自由に決められます
-    // label: ボタンに表示する短い名前
-    // prompt: ボタンを押したときにAIハヤトへ送る実際の質問文
-    // =========================================================================
     const QUICK_PROMPTS = [
       {
         label: "🌤️ 明日の天気",
@@ -567,6 +561,21 @@
     let isSending = false;
     const conversationHistory = [];
 
+    function scrollToMessage(targetEl, smooth = true) {
+      if (!targetEl || !chatPanel) return;
+      try {
+        if (typeof targetEl.scrollIntoView === "function") {
+          targetEl.scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            block: "nearest"
+          });
+        }
+        chatPanel.scrollTop = chatPanel.scrollHeight;
+      } catch (e) {
+        chatPanel.scrollTop = chatPanel.scrollHeight;
+      }
+    }
+
     function refreshVoiceButton() {
       if (voiceEnabled) {
         voiceToggleBtn.textContent = "🔊 音声ON";
@@ -585,7 +594,7 @@
       }
     }
 
-    function speakJapanese(text, force = false) {
+    function speakJapanese(text, force = false, targetMsgEl = null) {
       if (!("speechSynthesis" in window)) return;
       if (!force && !voiceEnabled) return;
       const cleanText = String(text || "")
@@ -608,6 +617,8 @@
 
       utter.onstart = () => {
         subStatusText.textContent = "🔊 読み上げ中...";
+        // 音声出力開始時に該当メッセージまたはチャット末尾へ自動スクロール
+        scrollToMessage(targetMsgEl || chatPanel.lastElementChild, true);
       };
       utter.onend = () => {
         if (!isSending) subStatusText.textContent = "待機中";
@@ -667,7 +678,7 @@
         speakBtn.className = "speak-mini-btn";
         speakBtn.textContent = "🔊 読み上げ";
         speakBtn.addEventListener("click", () => {
-          speakJapanese(body.textContent, true);
+          speakJapanese(body.textContent, true, box);
         });
         header.appendChild(speakBtn);
       }
@@ -678,7 +689,7 @@
       box.appendChild(header);
       box.appendChild(body);
       chatPanel.appendChild(box);
-      chatPanel.scrollTop = chatPanel.scrollHeight;
+      scrollToMessage(box, false);
       return body;
     }
 
@@ -717,7 +728,7 @@
       chatPanel.innerHTML = "";
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。先頭に「明日の天気」と「現在時間」の定型質問ボタンを追加いたしました。ご用件をお申し付けください。",
+        "AIハヤトです、殿。音声読み上げが始まると画面も自動で追従するよう調整いたしました。ご用件をお申し付けください。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -733,7 +744,7 @@
       localStorage.setItem(STORAGE_VOICE, String(voiceEnabled));
       refreshVoiceButton();
       if (voiceEnabled) {
-        speakJapanese("音声読み上げをオンにしました、殿。", true);
+        speakJapanese("音声読み上げをオンにしました、殿。", true, chatPanel.lastElementChild);
       } else {
         stopSpeech();
         if (!isSending) subStatusText.textContent = "待機中（音声OFF）";
@@ -779,8 +790,8 @@
       refreshKeyStatus();
       keyModal.classList.remove("open");
       const msg = "APIキーの保存を確認しました、殿。いつでもご用件をお申し付けください。";
-      appendMessage("hayato", msg, "AIハヤト", { allowSpeak: true });
-      speakJapanese(msg);
+      const bodyEl = appendMessage("hayato", msg, "AIハヤト", { allowSpeak: true });
+      speakJapanese(msg, false, bodyEl.parentElement);
     });
 
     deleteKeyBtn.addEventListener("click", () => {
@@ -893,6 +904,7 @@
 
       appendMessage("user", displayLabel ? `${displayLabel}（${getCurrentTimeLabel()}）` : userText);
       const thinkingBody = appendMessage("hayato", "確認中です、少々お待ちください...", `AIハヤト (${selectedModel})`);
+      const replyBoxEl = thinkingBody.parentElement;
 
       const promptForApi = buildPromptWithContext(userText);
       const nextContents = [
@@ -909,18 +921,20 @@
         speakBtn.className = "speak-mini-btn";
         speakBtn.textContent = "🔊 読み上げ";
         speakBtn.addEventListener("click", () => {
-          speakJapanese(replyText, true);
+          speakJapanese(replyText, true, replyBoxEl);
         });
-        thinkingBody.parentElement.querySelector(".msg-header").appendChild(speakBtn);
+        replyBoxEl.querySelector(".msg-header").appendChild(speakBtn);
+
+        scrollToMessage(replyBoxEl, true);
 
         conversationHistory.push(
           { role: "user", parts: [{ text: promptForApi }] },
           { role: "model", parts: [{ text: replyText }] }
         );
         subStatusText.textContent = "待機中";
-        speakJapanese(replyText);
+        speakJapanese(replyText, false, replyBoxEl);
       } catch (err) {
-        thinkingBody.parentElement.remove();
+        replyBoxEl.remove();
         appendMessage("error", formatFriendlyError(err?.message, err?.status));
         subStatusText.textContent = "エラー確認";
       } finally {
