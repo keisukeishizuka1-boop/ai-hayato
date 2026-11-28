@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AIハヤト - 最小構成コンソール</title>
+  <title>AIハヤト - 基本音声＋定型質問コンソール</title>
   <style>
     :root {
       --bg-main: #070d19;
@@ -16,6 +16,7 @@
       --cyan: #00f0ff;
       --green: #00ffaa;
       --red: #ff4d79;
+      --amber: #ffd166;
       --text-main: #eef7ff;
       --text-sub: #88accb;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -90,6 +91,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .status-pill {
@@ -119,7 +121,7 @@
     .controls-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
@@ -140,20 +142,26 @@
       background: rgba(0, 240, 255, 0.1);
       color: var(--text-main);
       border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 0.82rem;
+      padding: 8px 11px;
+      font-size: 0.8rem;
       font-weight: 700;
       min-height: 38px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
+      gap: 4px;
       white-space: nowrap;
     }
 
     .btn:active {
       transform: scale(0.97);
+    }
+
+    .btn.muted {
+      background: rgba(255, 77, 121, 0.14);
+      border-color: rgba(255, 77, 121, 0.45);
+      color: #ff94af;
     }
 
     .btn-primary {
@@ -171,7 +179,7 @@
     /* チャット表示エリア */
     .chat-panel {
       flex: 1;
-      min-height: 180px;
+      min-height: 160px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -193,11 +201,33 @@
       white-space: pre-wrap;
     }
 
+    .msg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
     .msg-meta {
       font-size: 0.7rem;
       font-weight: 700;
-      margin-bottom: 4px;
-      opacity: 0.85;
+      opacity: 0.9;
+    }
+
+    .speak-mini-btn {
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--cyan);
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .speak-mini-btn:active {
+      transform: scale(0.95);
     }
 
     .msg.hayato {
@@ -232,7 +262,7 @@
       color: var(--red);
     }
 
-    /* 入力エリア */
+    /* 定型質問＋入力エリア */
     .composer {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -241,6 +271,38 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    .quick-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-btn {
+      flex: 0 0 auto;
+      background: rgba(0, 240, 255, 0.09);
+      border: 1px solid rgba(0, 240, 255, 0.36);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 7px 11px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      min-height: 36px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .quick-btn:active {
+      background: rgba(0, 240, 255, 0.24);
+      transform: scale(0.97);
     }
 
     .composer-row {
@@ -256,7 +318,7 @@
       border: 1px solid var(--border);
       border-radius: 11px;
       padding: 11px 12px;
-      font-size: 16px; /* iOS Safariでフォーカス時の自動ズームを防止 */
+      font-size: 16px;
       color: var(--text-main);
       outline: none;
     }
@@ -266,7 +328,7 @@
     }
 
     .send-btn {
-      min-width: 78px;
+      min-width: 76px;
       min-height: 44px;
       padding: 0 14px;
       font-size: 0.9rem;
@@ -328,7 +390,7 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 11px 12px;
-      font-size: 16px; /* iOS自動ズーム防止 */
+      font-size: 16px;
       color: var(--text-main);
       outline: none;
     }
@@ -370,7 +432,7 @@
           <span>AIハヤト</span>
           <span class="status-pill" id="keyStatusPill">キー未設定</span>
         </div>
-        <div class="brand-sub" id="subStatusText">最小構成・文字対話モード</div>
+        <div class="brand-sub" id="subStatusText">基本音声＋定型質問モード</div>
       </div>
 
       <div class="controls-right">
@@ -378,6 +440,7 @@
           <option value="gemini-3.8-flash">gemini-3.8-flash</option>
           <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
         </select>
+        <button class="btn" id="voiceToggleBtn" type="button" aria-label="音声読み上げ切り替え">🔊 音声ON</button>
         <button class="btn" id="openKeyModalBtn" type="button">🔑 API設定</button>
         <button class="btn" id="clearChatBtn" type="button">履歴消去</button>
       </div>
@@ -386,6 +449,9 @@
     <main class="chat-panel" id="chatPanel" aria-live="polite"></main>
 
     <section class="composer">
+      <!-- 定型質問ボタン一覧（下のスクリプト内 QUICK_PROMPTS で自由に編集可能） -->
+      <div class="quick-list" id="quickList" aria-label="定型質問"></div>
+
       <div class="composer-row">
         <input
           type="text"
@@ -408,7 +474,7 @@
       <div class="modal-title" id="keyModalTitle">🔑 Gemini APIキー設定</div>
       <p class="modal-text">
         APIキーはこの端末のブラウザ（localStorage）にのみ保存され、画面上には平文で表示しません。
-        個人利用の静的配信を前提とした最小構成のため、公開環境での利用時はキー管理にご注意ください。
+        個人利用の静的配信を前提とした構成のため、公開環境での利用時はキー管理にご注意ください。
       </p>
       <input
         type="password"
@@ -426,21 +492,48 @@
   </div>
 
   <script>
+    // =========================================================================
+    // ★ よく使う定型質問ボタンは、ここの配列を書き換えるだけで自由に決められます
+    // label: ボタンに表示する短い名前
+    // prompt: ボタンを押したときにAIハヤトへ送る実際の質問文
+    // =========================================================================
+    const QUICK_PROMPTS = [
+      {
+        label: "📋 今日の段取り",
+        prompt: "今日を効率よく進めるための段取りと、先回りの優先順位を3つ教えてください。"
+      },
+      {
+        label: "💡 要点整理",
+        prompt: "複雑な話を分かりやすく整理して伝えるコツを簡潔に教えてください。"
+      },
+      {
+        label: "🛡️ セキュリティ確認",
+        prompt: "日常のネット利用やメール・メッセージで気をつけるべきセキュリティのポイントを教えてください。"
+      },
+      {
+        label: "☕ 気分転換",
+        prompt: "少し頭を休めたいときに短時間でリフレッシュできる工夫を教えてください。"
+      }
+    ];
+
     const STORAGE_KEY = "ai_hayato_gemini_api_key_v1";
     const STORAGE_MODEL = "ai_hayato_gemini_model_v1";
+    const STORAGE_VOICE = "ai_hayato_voice_enabled_v1";
 
     const SYSTEM_INSTRUCTION = [
       "あなたは私専属のアシスタント「AIハヤト」です。",
       "冷静・有能でプライドがあります。",
       "忠実ですが従順ではなく、必要な意見や懸念、先回りの提案ははっきり述べつつ、最終的には私の意思を尊重してください。",
-      "ユーザーのことは「殿」と呼び、簡潔で要点を押さえた日本語で回答してください。"
+      "ユーザーのことは「殿」と呼び、音声読み上げでも聞き取りやすいよう簡潔で自然な日本語で回答してください。"
     ].join(" ");
 
     const chatPanel = document.getElementById("chatPanel");
+    const quickList = document.getElementById("quickList");
     const promptInput = document.getElementById("promptInput");
     const sendBtn = document.getElementById("sendBtn");
     const modelSelect = document.getElementById("modelSelect");
     const activeModelLabel = document.getElementById("activeModelLabel");
+    const voiceToggleBtn = document.getElementById("voiceToggleBtn");
     const keyStatusPill = document.getElementById("keyStatusPill");
     const subStatusText = document.getElementById("subStatusText");
     const clearChatBtn = document.getElementById("clearChatBtn");
@@ -460,8 +553,71 @@
     modelSelect.value = selectedModel;
     activeModelLabel.textContent = `モデル: ${selectedModel}`;
 
+    const savedVoice = localStorage.getItem(STORAGE_VOICE);
+    let voiceEnabled = savedVoice === null ? true : savedVoice === "true";
+
     let isSending = false;
     const conversationHistory = [];
+
+    function refreshVoiceButton() {
+      if (voiceEnabled) {
+        voiceToggleBtn.textContent = "🔊 音声ON";
+        voiceToggleBtn.classList.remove("muted");
+      } else {
+        voiceToggleBtn.textContent = "🔇 音声OFF";
+        voiceToggleBtn.classList.add("muted");
+      }
+    }
+
+    function stopSpeech() {
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    }
+
+    function speakJapanese(text, force = false) {
+      if (!("speechSynthesis" in window)) return;
+      if (!force && !voiceEnabled) return;
+      const cleanText = String(text || "")
+        .replace(/[*#`_~]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!cleanText) return;
+
+      stopSpeech();
+      const utter = new SpeechSynthesisUtterance(cleanText);
+      utter.lang = "ja-JP";
+      utter.rate = 1.05;
+      utter.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+      const jaVoice = voices.find((v) => v && v.lang && v.lang.toLowerCase().startsWith("ja"));
+      if (jaVoice) {
+        utter.voice = jaVoice;
+      }
+
+      utter.onstart = () => {
+        subStatusText.textContent = "🔊 読み上げ中...";
+      };
+      utter.onend = () => {
+        if (!isSending) subStatusText.textContent = "待機中";
+      };
+      utter.onerror = () => {
+        if (!isSending) subStatusText.textContent = "待機中";
+      };
+
+      try {
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
+    if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
 
     function refreshKeyStatus() {
       if (apiKey) {
@@ -475,9 +631,13 @@
       }
     }
 
-    function appendMessage(role, text, metaLabel = "") {
+    function appendMessage(role, text, metaLabel = "", options = {}) {
+      const { allowSpeak = false } = options;
       const box = document.createElement("div");
       box.className = `msg ${role}`;
+
+      const header = document.createElement("div");
+      header.className = "msg-header";
 
       const meta = document.createElement("div");
       meta.className = "msg-meta";
@@ -491,26 +651,70 @@
         meta.textContent = "システム通知";
       }
 
+      header.appendChild(meta);
+
+      if (allowSpeak) {
+        const speakBtn = document.createElement("button");
+        speakBtn.type = "button";
+        speakBtn.className = "speak-mini-btn";
+        speakBtn.textContent = "🔊 読み上げ";
+        speakBtn.addEventListener("click", () => {
+          speakJapanese(body.textContent, true);
+        });
+        header.appendChild(speakBtn);
+      }
+
       const body = document.createElement("div");
       body.textContent = text;
 
-      box.appendChild(meta);
+      box.appendChild(header);
       box.appendChild(body);
       chatPanel.appendChild(box);
       chatPanel.scrollTop = chatPanel.scrollHeight;
       return body;
     }
 
+    function renderQuickButtons() {
+      quickList.innerHTML = "";
+      QUICK_PROMPTS.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quick-btn";
+        btn.textContent = item.label;
+        btn.title = item.prompt;
+        btn.addEventListener("click", () => {
+          handleSend(item.prompt);
+        });
+        quickList.appendChild(btn);
+      });
+    }
+
     function initGreeting() {
       chatPanel.innerHTML = "";
       appendMessage(
         "hayato",
-        "おはようございます、殿。AIハヤトです。まずは文字対話の最小構成で起動いたしました。右上の「API設定」からキーを保存いただければ、すぐにご用件を伺います。無駄な通信は省いておきますので、ご指示ください。"
+        "AIハヤトです、殿。基本の音声読み上げと定型質問ボタンを組み込みました。定型質問はコード内の設定で自由に変更できます。ご用件をお申し付けください。",
+        "AIハヤト",
+        { allowSpeak: false }
       );
     }
 
+    refreshVoiceButton();
     refreshKeyStatus();
+    renderQuickButtons();
     initGreeting();
+
+    voiceToggleBtn.addEventListener("click", () => {
+      voiceEnabled = !voiceEnabled;
+      localStorage.setItem(STORAGE_VOICE, String(voiceEnabled));
+      refreshVoiceButton();
+      if (voiceEnabled) {
+        speakJapanese("音声読み上げをオンにしました、殿。", true);
+      } else {
+        stopSpeech();
+        if (!isSending) subStatusText.textContent = "待機中（音声OFF）";
+      }
+    });
 
     modelSelect.addEventListener("change", () => {
       selectedModel = modelSelect.value;
@@ -550,7 +754,9 @@
       keyInput.value = "";
       refreshKeyStatus();
       keyModal.classList.remove("open");
-      appendMessage("hayato", "APIキーの保存を確認しました、殿。いつでもご用件をお申し付けください。");
+      const msg = "APIキーの保存を確認しました、殿。いつでもご用件をお申し付けください。";
+      appendMessage("hayato", msg, "AIハヤト", { allowSpeak: true });
+      speakJapanese(msg);
     });
 
     deleteKeyBtn.addEventListener("click", () => {
@@ -559,10 +765,12 @@
       localStorage.removeItem(STORAGE_KEY);
       refreshKeyStatus();
       keyModal.classList.remove("open");
+      stopSpeech();
       appendMessage("hayato", "保存されていたAPIキーを削除しました。再び接続される際は「API設定」からご入力ください。");
     });
 
     clearChatBtn.addEventListener("click", () => {
+      stopSpeech();
       conversationHistory.length = 0;
       initGreeting();
     });
@@ -627,7 +835,6 @@
           firstErr.status === 500 ||
           /high demand|overloaded|temporarily unavailable/i.test(firstErr.message || "");
 
-        // リクエスト枠節約のため、一時的なサーバー混雑時のみ最大1回だけ再試行
         if (isTransientServerBusy) {
           subStatusText.textContent = "サーバー混雑のため1回のみ再試行中...";
           thinkingBodyEl.textContent = "サーバーが混み合っております。1回だけ再試行いたします、殿...";
@@ -638,9 +845,9 @@
       }
     }
 
-    async function handleSend() {
+    async function handleSend(overrideText = "") {
       if (isSending) return;
-      const userText = promptInput.value.trim();
+      const userText = (overrideText || promptInput.value).trim();
       if (!userText) return;
 
       if (!apiKey) {
@@ -651,10 +858,13 @@
         return;
       }
 
+      stopSpeech();
       isSending = true;
       sendBtn.disabled = true;
       promptInput.disabled = true;
-      promptInput.value = "";
+      if (!overrideText) {
+        promptInput.value = "";
+      }
       subStatusText.textContent = `${selectedModel} に送信中...`;
 
       appendMessage("user", userText);
@@ -668,11 +878,22 @@
       try {
         const replyText = await requestGeminiWithSingleRetry(selectedModel, nextContents, thinkingBody);
         thinkingBody.textContent = replyText;
+
+        const speakBtn = document.createElement("button");
+        speakBtn.type = "button";
+        speakBtn.className = "speak-mini-btn";
+        speakBtn.textContent = "🔊 読み上げ";
+        speakBtn.addEventListener("click", () => {
+          speakJapanese(replyText, true);
+        });
+        thinkingBody.parentElement.querySelector(".msg-header").appendChild(speakBtn);
+
         conversationHistory.push(
           { role: "user", parts: [{ text: userText }] },
           { role: "model", parts: [{ text: replyText }] }
         );
         subStatusText.textContent = "待機中";
+        speakJapanese(replyText);
       } catch (err) {
         thinkingBody.parentElement.remove();
         appendMessage("error", formatFriendlyError(err?.message, err?.status));
@@ -681,11 +902,13 @@
         isSending = false;
         sendBtn.disabled = false;
         promptInput.disabled = false;
-        promptInput.focus();
+        if (!overrideText) {
+          promptInput.focus();
+        }
       }
     }
 
-    sendBtn.addEventListener("click", handleSend);
+    sendBtn.addEventListener("click", () => handleSend());
 
     promptInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.isComposing) {
