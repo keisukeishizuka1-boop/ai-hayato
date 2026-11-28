@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AIハヤト - ハイパーリンク＆音声入力コンソール</title>
+  <title>AIハヤト - 音声エンジン事前起動＆ハイパーリンクコンソール</title>
   <style>
     :root {
       --bg-main: #070d19;
@@ -263,7 +263,7 @@
       text-overflow: ellipsis;
     }
 
-    /* 直接飛べる外部リンクバー（ハイパーリンク） */
+    /* 直接タップで外部サイトへ飛べるハイパーリンク欄 */
     .hyperlink-bar {
       background: var(--bg-card);
       border: 1px solid rgba(0, 255, 170, 0.35);
@@ -567,7 +567,7 @@
           <span>AIハヤト</span>
           <span class="status-pill" id="keyStatusPill">キー未設定</span>
         </div>
-        <div class="brand-sub" id="subStatusText">押して話せる音声入力＋直接リンク</div>
+        <div class="brand-sub" id="subStatusText">音声事前起動＋直接ハイパーリンク</div>
       </div>
 
       <div class="controls-right">
@@ -599,7 +599,7 @@
           <span class="avatar-name">HAYATO // CONSOLE</span>
           <span class="avatar-state-tag" id="avatarStateTag">待機中</span>
         </div>
-        <div class="avatar-caption" id="avatarCaption">リンクをタップすると外部サイトへ直接移動できます、殿。</div>
+        <div class="avatar-caption" id="avatarCaption">送信操作時に音声エンジンを事前起動する設定です、殿。</div>
       </div>
     </section>
 
@@ -733,6 +733,7 @@
     let isSending = false;
     let isListening = false;
     let recognition = null;
+    let speechUnlocked = false;
     const conversationHistory = [];
 
     function setAvatarVisualState(mode, caption) {
@@ -805,6 +806,28 @@
       }
     }
 
+    // ユーザー操作（送信タップ・定型質問タップ・マイク開始など）の瞬間にSafariの音声エンジンを起こす
+    function unlockSpeechEngine() {
+      if (!("speechSynthesis" in window)) return;
+      try {
+        if (typeof window.speechSynthesis.resume === "function") {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.getVoices();
+        if (!speechUnlocked && voiceEnabled) {
+          const primer = new SpeechSynthesisUtterance(" ");
+          primer.lang = "ja-JP";
+          primer.volume = 0;
+          primer.rate = 2.0;
+          primer.onend = () => {
+            speechUnlocked = true;
+          };
+          window.speechSynthesis.speak(primer);
+          speechUnlocked = true;
+        }
+      } catch (e) {}
+    }
+
     function releaseMicrophone(useAbort = false) {
       isListening = false;
       micBtn.classList.remove("listening");
@@ -819,7 +842,7 @@
       } catch (e) {}
     }
 
-    function speakJapanese(text, force = false, targetMsgEl = null) {
+    function speakJapanese(text, force = false, targetMsgEl = null, delayMs = 0) {
       if (!("speechSynthesis" in window)) return;
       if (!force && !voiceEnabled) return;
       const cleanText = String(text || "")
@@ -828,39 +851,55 @@
         .trim();
       if (!cleanText) return;
 
-      stopSpeech();
-      const utter = new SpeechSynthesisUtterance(cleanText);
-      utter.lang = "ja-JP";
-      utter.rate = 1.05;
-      utter.pitch = 1.0;
+      const runSpeak = () => {
+        stopSpeech();
+        try {
+          if (typeof window.speechSynthesis.resume === "function") {
+            window.speechSynthesis.resume();
+          }
+        } catch (e) {}
 
-      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-      const jaVoice = voices.find((v) => v && v.lang && v.lang.toLowerCase().startsWith("ja"));
-      if (jaVoice) {
-        utter.voice = jaVoice;
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.lang = "ja-JP";
+        utter.rate = 1.05;
+        utter.pitch = 1.0;
+        utter.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        const jaVoice = voices.find((v) => v && v.lang && v.lang.toLowerCase().startsWith("ja"));
+        if (jaVoice) {
+          utter.voice = jaVoice;
+        }
+
+        utter.onstart = () => {
+          speechUnlocked = true;
+          subStatusText.textContent = "🔊 読み上げ中...";
+          setAvatarVisualState("speaking", "ご返答を読み上げております、殿。");
+          scrollToMessage(targetMsgEl || chatPanel.lastElementChild, true);
+        };
+        utter.onend = () => {
+          if (!isSending && !isListening) {
+            subStatusText.textContent = "待機中";
+            setAvatarVisualState("idle", "読み上げ完了。次の指示をお待ちしております、殿。");
+          }
+        };
+        utter.onerror = () => {
+          if (!isSending && !isListening) {
+            subStatusText.textContent = "待機中";
+            setAvatarVisualState("idle", "待機中でございます、殿。");
+          }
+        };
+
+        try {
+          window.speechSynthesis.speak(utter);
+        } catch (e) {}
+      };
+
+      if (delayMs > 0) {
+        setTimeout(runSpeak, delayMs);
+      } else {
+        runSpeak();
       }
-
-      utter.onstart = () => {
-        subStatusText.textContent = "🔊 読み上げ中...";
-        setAvatarVisualState("speaking", "ご返答を読み上げております、殿。");
-        scrollToMessage(targetMsgEl || chatPanel.lastElementChild, true);
-      };
-      utter.onend = () => {
-        if (!isSending && !isListening) {
-          subStatusText.textContent = "待機中";
-          setAvatarVisualState("idle", "読み上げ完了。次の指示をお待ちしております、殿。");
-        }
-      };
-      utter.onerror = () => {
-        if (!isSending && !isListening) {
-          subStatusText.textContent = "待機中";
-          setAvatarVisualState("idle", "待機中でございます、殿。");
-        }
-      };
-
-      try {
-        window.speechSynthesis.speak(utter);
-      } catch (e) {}
     }
 
     if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -896,7 +935,7 @@
         releaseMicrophone(true);
         if (transcript) {
           promptInput.value = transcript;
-          handleSend(transcript, `🎤 ${transcript}`);
+          handleSend(transcript, `🎤 ${transcript}`, true);
         }
       };
 
@@ -925,6 +964,7 @@
 
     micBtn.addEventListener("click", () => {
       if (!recognition || isSending) return;
+      unlockSpeechEngine();
       stopSpeech();
       if (isListening) {
         releaseMicrophone(true);
@@ -982,7 +1022,8 @@
         speakBtn.className = "speak-mini-btn";
         speakBtn.textContent = "🔊 読み上げ";
         speakBtn.addEventListener("click", () => {
-          speakJapanese(body.textContent, true, box);
+          unlockSpeechEngine();
+          speakJapanese(body.textContent, true, box, 0);
         });
         header.appendChild(speakBtn);
       }
@@ -1022,7 +1063,8 @@
         btn.textContent = item.label;
         btn.title = item.prompt;
         btn.addEventListener("click", () => {
-          handleSend(item.prompt, item.label);
+          unlockSpeechEngine();
+          handleSend(item.prompt, item.label, false);
         });
         quickList.appendChild(btn);
       });
@@ -1030,10 +1072,10 @@
 
     function initGreeting() {
       chatPanel.innerHTML = "";
-      setAvatarVisualState("idle", "上部のリンクをタップすると外部サイトへ直接移動できます、殿。");
+      setAvatarVisualState("idle", "送信操作時に音声エンジンを事前起動する設定です、殿。");
       appendMessage(
         "hayato",
-        "AIハヤトです、殿。「気象庁・天気を開く」と「鉄道運行状況」を直接タップで飛べるハイパーリンクとして配置いたしました。マイク終了後は音声認識を切るようにしております。",
+        "AIハヤトです、殿。送信タップ時にSafariの音声エンジンを先に起こしておく改善を組み込みました。ご用件をお申し付けください。",
         "AIハヤト",
         { allowSpeak: false }
       );
@@ -1050,7 +1092,8 @@
       localStorage.setItem(STORAGE_VOICE, String(voiceEnabled));
       refreshVoiceButton();
       if (voiceEnabled) {
-        speakJapanese("音声読み上げをオンにしました、殿。", true, chatPanel.lastElementChild);
+        unlockSpeechEngine();
+        speakJapanese("音声読み上げをオンにしました、殿。", true, chatPanel.lastElementChild, 0);
       } else {
         stopSpeech();
         if (!isSending && !isListening) {
@@ -1086,6 +1129,7 @@
     });
 
     saveKeyBtn.addEventListener("click", () => {
+      unlockSpeechEngine();
       const entered = keyInput.value.trim();
       if (!entered && !apiKey) {
         appendMessage("error", "APIキーが入力されていません。有効なキーを入力してから保存してください。");
@@ -1101,7 +1145,7 @@
       keyModal.classList.remove("open");
       const msg = "APIキーの保存を確認しました、殿。いつでもご用件をお申し付けください。";
       const bodyEl = appendMessage("hayato", msg, "AIハヤト", { allowSpeak: true });
-      speakJapanese(msg, false, bodyEl.parentElement);
+      speakJapanese(msg, false, bodyEl.parentElement, 0);
     });
 
     deleteKeyBtn.addEventListener("click", () => {
@@ -1200,7 +1244,7 @@
       }
     }
 
-    async function handleSend(overrideText = "", displayLabel = "") {
+    async function handleSend(overrideText = "", displayLabel = "", fromVoice = false) {
       if (isSending) return;
       const userText = (overrideText || promptInput.value).trim();
       if (!userText) return;
@@ -1214,6 +1258,7 @@
         return;
       }
 
+      unlockSpeechEngine();
       stopSpeech();
       releaseMicrophone(true);
       isSending = true;
@@ -1245,7 +1290,8 @@
         speakBtn.className = "speak-mini-btn";
         speakBtn.textContent = "🔊 読み上げ";
         speakBtn.addEventListener("click", () => {
-          speakJapanese(replyText, true, replyBoxEl);
+          unlockSpeechEngine();
+          speakJapanese(replyText, true, replyBoxEl, 0);
         });
         replyBoxEl.querySelector(".msg-header").appendChild(speakBtn);
 
@@ -1257,7 +1303,7 @@
         );
         subStatusText.textContent = "待機中";
         setAvatarVisualState("idle", "ご返答を表示いたしました、殿。");
-        speakJapanese(replyText, false, replyBoxEl);
+        speakJapanese(replyText, false, replyBoxEl, fromVoice ? 350 : 80);
       } catch (err) {
         replyBoxEl.remove();
         appendMessage("error", formatFriendlyError(err?.message, err?.status));
@@ -1274,12 +1320,16 @@
       }
     }
 
-    sendBtn.addEventListener("click", () => handleSend());
+    sendBtn.addEventListener("click", () => {
+      unlockSpeechEngine();
+      handleSend("", "", false);
+    });
 
     promptInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.isComposing) {
         e.preventDefault();
-        handleSend();
+        unlockSpeechEngine();
+        handleSend("", "", false);
       }
     });
   </script>
